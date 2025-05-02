@@ -1,4 +1,4 @@
-(define-module (erudition packages awatcher)
+(define-module (awatcher)
   #:use-module ((guix licenses) #:prefix license:)
   #:use-module (guix download)
   #:use-module (guix packages)

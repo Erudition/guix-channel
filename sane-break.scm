@@ -1,4 +1,4 @@
-(define-module (erudition packages sane-break)
+(define-module (sane-break)
   #:export (sane-break))
 
 
