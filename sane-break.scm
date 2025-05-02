@@ -1,3 +1,7 @@
+(define-module (erudition packages sane-break)
+  #:export (sane-break))
+
+
 (use-modules (guix packages) (guix download) (guix build-system qt) (guix licenses) (gnu packages qt) (gnu packages xdisorg) (gnu packages xorg) (gnu packages kde-plasma) (gnu packages freedesktop) (gnu packages vulkan) (gnu packages gtk) (gnu packages pkg-config) (gnu packages kde-frameworks))
 
 
