@@ -1,4 +1,4 @@
-(define-module (amber)
+(define-module (amber-lang)
   #:use-module (guix packages)
   #:use-module (gnu packages crates-io)
   #:use-module (guix download)
@@ -696,9 +696,9 @@ from system source.")
     (license (list expat asl2.0))))
 
 
-(define-public amber
+(define-public amber-lang
   (package
-    (name "amber")
+    (name "amber-lang")
     (version "main")
     (source (origin
               (method git-fetch)
