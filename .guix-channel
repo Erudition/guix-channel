@@ -3,7 +3,7 @@
   (url "https://github.com/Erudition/guix-channel.git")
   (dependencies
     (channel
-        (name 'nonguix)
+        (name nonguix)
         (url "https://gitlab.com/nonguix/nonguix")
-    )
+    002)
    ))
