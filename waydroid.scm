@@ -220,7 +220,7 @@
                       (wrap-program (string-append #$output "/bin/waydroid")
                                     `("PYTHONPATH" prefix ,python-path))
                       (wrap-program (string-append #$output "/bin/waydroid")
-                                    `("GI_TYPELIB_PATH" prefix "/lib/girepository-1.0"))
+                                    `("GI_TYPELIB_PATH" prefix (list "/lib/girepository-1.0")))
                     ))))))
     (native-inputs (list gobject-introspection))
     (propagated-inputs

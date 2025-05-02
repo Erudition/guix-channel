@@ -1,4 +1,4 @@
-(define-module (px packages activitywatch)
+(define-module (activitywatch)
   #:use-module ((guix licenses) #:prefix license:)
   #:use-module (guix download)
   #:use-module (guix packages)
