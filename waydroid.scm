@@ -251,5 +251,3 @@ underlying hardware.  The Android runtime environment ships with a minimal
 customized Android system image based on LineageOS.  The used image is
 currently based on Android 11.")
     (license license:gpl3)))
-
-waydroid

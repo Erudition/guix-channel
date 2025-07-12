@@ -145,4 +145,4 @@
     (description "ActivityWatch is about recording our digital lives, an evergrowing part of our lives in general, and the new opportunities enabled by such a record.")
     (license license:mpl2.0)))
 
-activitywatch
+
