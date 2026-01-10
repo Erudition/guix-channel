@@ -32,7 +32,8 @@
         ("x86_64-linux" "linux-x86_64")
         ("i686-linux" "linux-ia32")
         ("aarch64-linux" "linux-arm64")
-        ("armhf-linux" "linux-armv7l"))
+        ("armhf-linux" "linux-armv7l")
+        (_ "unknown"))
       ".zip"))
     (sha256
      (base32 hash))))
@@ -129,7 +130,6 @@
         ,(make-aw-release-asset
           version "activitywatch"
           "1w62s9y8z6yn2mv55npsg1rfi2az4lim62v4awxwq1xzx4249pi0"))
-       ("gcc:lib" ,gcc "lib")
        ("gcc" ,gcc "lib")
        ("glibc" ,glibc)
        ("fontconfig" ,fontconfig)
@@ -140,9 +140,13 @@
        ("xkeyboard-config" ,xkeyboard-config)
        ("zlib" ,zlib)
        ("bash-minimal" ,bash-minimal)))
+    (supported-systems '("x86_64-linux" "i686-linux" "aarch64-linux" "armhf-linux"))
     (home-page "https://activitywatch.net/")
-    (synopsis "ActivityWatch is an automatic time-tracking software which helps you keep track of what you do.")
-    (description "ActivityWatch is about recording our digital lives, an evergrowing part of our lives in general, and the new opportunities enabled by such a record.")
+    (synopsis "Automatic time-tracking software")
+    (description "ActivityWatch is an automatic time-tracking software that
+helps you keep track of what you do.  It is about recording our digital lives,
+an evergrowing part of our lives in general, and the new opportunities enabled
+by such a record.")
     (license license:mpl2.0)))
 
 
