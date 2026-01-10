@@ -1,13 +1,16 @@
 (define-module (gnome-ext-hanabi)
   #:use-module ((guix licenses) #:prefix license:)
   #:use-module (guix packages)
+  #:use-module (guix gexp)
   #:use-module (guix git-download)
   #:use-module (guix build-system meson)
+  #:use-module (guix utils)
   #:use-module (gnu packages glib)
   #:use-module (gnu packages gettext)
   #:use-module (gnu packages gnome)
   #:use-module (gnu packages gstreamer)
-  #:use-module (gnu packages gtk))
+  #:use-module (gnu packages gtk)
+  #:use-module (gnu packages bash))
 
 (define-public gnome-ext-hanabi
   (package
@@ -25,15 +28,29 @@
     (build-system meson-build-system)
     (native-inputs
      (list gettext-minimal
-           (list glib "bin"))) ; For glib-compile-schemas
+           (list glib "bin")
+           gjs)) ; For glib-compile-schemas and shebang patching
     (inputs
-     (list glib gtk))
+     (list glib gtk gjs bash-minimal gst-plugins-base gst-plugins-good))
     (propagated-inputs
      (list gst-plugins-base
            gst-plugins-good
            gst-plugins-bad
            gst-plugins-ugly
            gst-libav))
+    (arguments
+     (list
+      #:phases
+      #~(modify-phases %standard-phases
+          (add-after 'install 'wrap-renderer
+            (lambda* (#:key inputs outputs #:allow-other-keys)
+              (let* ((out (assoc-ref outputs "out"))
+                     (renderer (string-append out "/share/gnome-shell/extensions/hanabi-extension@jeffshee.github.io/renderer/renderer.js"))
+                     (gi-typelib-path (getenv "GI_TYPELIB_PATH"))
+                     (gst-plugin-path (getenv "GST_PLUGIN_SYSTEM_PATH")))
+                (wrap-program renderer
+                  `("GI_TYPELIB_PATH" = (,(or gi-typelib-path "")))
+                  `("GST_PLUGIN_SYSTEM_PATH" = (,(or gst-plugin-path ""))))))))))
     (home-page "https://github.com/jeffshee/gnome-ext-hanabi")
     (synopsis "Live Wallpaper for GNOME")
     (description "Hanabi (fireworks) is a live wallpaper extension for GNOME Shell.
