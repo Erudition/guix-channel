@@ -12,6 +12,7 @@
   #:use-module (gnu packages base)
   #:use-module (gnu packages bash)
   #:use-module (gnu packages bison)
+  #:use-module (gnu packages check)
   #:use-module (gnu packages dns)
   #:use-module (gnu packages flex)
   #:use-module (gnu packages gawk)
@@ -226,7 +227,19 @@
                                     `("GI_TYPELIB_PATH" = ,gir-path)
                                   )
                     ))))))
-    (native-inputs (list gobject-introspection))
+    (native-inputs
+     (list gobject-introspection
+           pkg-config
+           python-pytest))
+    (inputs
+     (list bash-minimal
+           glib
+           gtk+
+           libglibutil
+           libgbinder
+           python-gbinder
+           python-pygobject
+           python-wrapper))
     (propagated-inputs
       (list gawk
             gtk
