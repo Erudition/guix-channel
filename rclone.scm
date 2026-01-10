@@ -11,18 +11,18 @@
     (hidden-package
         (package
             (name "rclone-deps")
-            (version "1.69.1")
+            (version "1.72.1")
             (source
                 (origin
                     (method url-fetch)
                     (uri (string-append "https://github.com/rclone/rclone/releases/download/"
                                 "v" version "/rclone-v" version "-vendor.tar.gz"))
                     (sha256
-                        (base32 "0fj8ym5rrwidzb4lkkxlz76nx95cvwxrapf0apmwbnd6lzcwb7qh"))))
+                        (base32 "0zwyd80j9mdf0mphbq7kcabwq10i9yr64mvwcpy04bi8b41j4x0z"))))
             (build-system copy-build-system)
             (arguments
                 '(#:install-plan
-                    '( ("vendor" "src") )
+                    '( ("." "src/src") )
                 )
             )
             (synopsis "rclone dependencies (vendor)")
@@ -36,14 +36,14 @@
 (define-public rclone
     (package
         (name "rclone")
-        (version "1.69.1")
+        (version "1.72.1")
         (source
         (origin
         (method url-fetch)
         (uri (string-append "https://github.com/rclone/rclone/releases/download/"
                             "v" version "/rclone-v" version ".tar.gz"))
         (sha256
-            (base32 "08h7drw4hsin1avfwv9fg3228ci7l6qzgym7ad0v3588bjkhzsh2"))))
+            (base32 "16sznbi2q6s3kf4z10ywh1gyr24bvg221rbff5phawky9q188yr2"))))
         (build-system go-build-system)
         (arguments
             (list
