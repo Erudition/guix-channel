@@ -1,6 +1,7 @@
 (define-module (sane-break)
   #:use-module (guix packages)
   #:use-module (guix download)
+  #:use-module (guix git-download)
   #:use-module (guix build-system qt)
   #:use-module ((guix licenses) #:prefix license:)
   #:use-module (gnu packages qt)
@@ -18,13 +19,14 @@
     (name "sane-break")
     (version "0.8.1")
     (source (origin
-              (method url-fetch)
-              (uri (string-append "https://github.com/AllanChain/sane-break/archive/refs/tags/v" version
-                                  ".tar.gz"))
-              (file-name (string-append name "-" version ".tar.gz"))
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://github.com/AllanChain/sane-break")
+                    (commit (string-append "v" version))))
+              (file-name (git-file-name name version))
               (sha256
                (base32
-                "1h25i2bafrjqjcaw6y9k8pwy8lj5swnwqwvsjffxi6iyqj74190g"))))
+                "017c4hxxqkpxs9qhw9xxz361hwbz0fmc5q51k01cavzf2m6xyjfz"))))
     (build-system qt-build-system)
     (inputs
      (list qtbase-5
