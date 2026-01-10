@@ -99,8 +99,11 @@
        ("bash-minimal" ,bash-minimal)))
     (propagated-inputs `(("gnome-shell-extension-focused-window-d-bus" ,gnome-shell-extension-focused-window-d-bus)))
     (home-page "https://activitywatch.net/")
-    (synopsis "Awatcher is ActivityWatch, an automatic time-tracking software which helps you keep track of what you do.")
-    (description "Awatcher is a fork of ActivityWatch which supports Wayland. ActivityWatch is about recording our digital lives, an evergrowing part of our lives in general, and the new opportunities enabled by such a record.")
+    (synopsis "Automatic time-tracking software with Wayland support")
+    (description "Awatcher is a fork of ActivityWatch that supports Wayland.
+It is an automatic time-tracking software that helps you keep track of what you
+do.  ActivityWatch is about recording our digital lives, an evergrowing part of
+our lives in general, and the new opportunities enabled by such a record.")
     (license license:mpl2.0)))
 
 
