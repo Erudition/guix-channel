@@ -17,7 +17,7 @@
 (define-public sane-break
   (package
     (name "sane-break")
-    (version "0.8.1")
+    (version "0.9.5")
     (source (origin
               (method git-fetch)
               (uri (git-reference
@@ -26,7 +26,7 @@
               (file-name (git-file-name name version))
               (sha256
                (base32
-                "017c4hxxqkpxs9qhw9xxz361hwbz0fmc5q51k01cavzf2m6xyjfz"))))
+                "1pjxzr7wp7kg8n5vrzngvhp9qb012fpha7sg8lznyhx8an5i8dz1"))))
     (build-system qt-build-system)
     (inputs
      (list qtbase-5
