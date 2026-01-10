@@ -24,7 +24,8 @@
               (file-name (git-file-name name version))
               (sha256
                (base32
-                "1kz3j237a2q1434vgliq5j4q1qcnppm7lhcfy27wx4swmvgvddp5"))))
+                "1kz3j237a2q1434vgliq5j4q1qcnppm7lhcfy27wx4swmvgvddp5"))
+              (patches (list (local-file "patches/enable-graphics-offload.patch")))))
     (build-system meson-build-system)
     (native-inputs
      (list gettext-minimal
