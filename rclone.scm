@@ -1,6 +1,11 @@
-(use-modules (guix packages) (guix download) (guix packages) (gnu packages) (guix build-system go) (guix build-system copy) ((guix licenses) #:prefix license:) (guix gexp))
-
-
+(define-module (rclone)
+  #:use-module (guix packages)
+  #:use-module (guix download)
+  #:use-module (gnu packages)
+  #:use-module (guix build-system go)
+  #:use-module (guix build-system copy)
+  #:use-module ((guix licenses) #:prefix license:)
+  #:use-module (guix gexp))
 
 (define-public rclone-deps
     (hidden-package
@@ -20,30 +25,10 @@
                     '( ("vendor" "src") )
                 )
             )
-;;             (build-system go-build-system)
-;;             (arguments
-;;                 (list
-;;                 #:import-path "vendor"
-;;                 #:install-source? #t
-;;                 )
-;;             )
-;;             (modify-phases %standard-phases
-;;                 (delete 'build)      ;no 'configure' script
-;;                 (replace 'install
-;;                     (lambda* (#:key outputs #:allow-other-keys)
-;;                     ;; The package's Makefile doesn't provide an "install"
-;;                     ;; rule so do it by ourselves.
-;;                     (let ((bin (string-append (assoc-ref outputs "out")
-;;                                                 "/bin")))
-;;                         (install-file "footswitch" bin)
-;;                         (install-file "scythe" bin)))
-;;                 )
-;;             )
-            (synopsis "@code{rsync} dependencies")
-            (description "")
+            (synopsis "rclone dependencies (vendor)")
+            (description "This package provides the vendored dependencies for rclone.")
             (home-page "https://rclone.org/")
             (license license:expat)
-
         )
     )
 )
@@ -68,11 +53,12 @@
             #:phases
                 #~(modify-phases %standard-phases
                     (add-before 'build 'add-vendor
-                        (lambda _
-                        (setenv "GOPATH" (string-append "/gnu/store/qza9bi4ngy5hs61psnv74hcbmm0c77mg-rclone-deps-1.69.1/vendor" ":" (getenv "GOPATH")))
+                        (lambda* (#:key inputs #:allow-other-keys)
+                          (let ((vendor (search-input-directory inputs "src")))
+                            (setenv "GOPATH" (string-append vendor ":" (getenv "GOPATH"))))
                         )
                     )
-                  )
+                )
             )
         )
         (native-inputs
