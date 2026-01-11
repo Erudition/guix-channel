@@ -23,12 +23,3 @@ index 1234567..89abcdef 100644
                      });
                  }
              });
-@@ -355,6 +358,8 @@ const HanabiRendererWindow = GObject.registerClass(
-                 default_width: windowDimension.width,
-                 title,
-             });
-+            this.set_can_focus(false);
-+            this.set_can_target(false);
- 
-             // Load CSS with custom style
-             let cssProvider = new Gtk.CssProvider();
