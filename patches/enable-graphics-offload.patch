@@ -2,6 +2,15 @@ diff --git a/src/renderer/renderer.js b/src/renderer/renderer.js
 index 1234567..89abcdef 100644
 --- a/src/renderer/renderer.js
 +++ b/src/renderer/renderer.js
+@@ -60,7 +60,7 @@ const haveContentFit = isGtkVersionAtLeast(4, 8);
+ 
+ // Support for dmabus and graphics offload is available from Gtk 4.14+
+ // FIXME: Disabled for now as it has issue with Ubuntu 24.04
+-const haveGraphicsOffload = isGtkVersionAtLeast(4, 14) && false;
++const haveGraphicsOffload = isGtkVersionAtLeast(4, 14);
+ 
+ // Use glsinkbin for Gst 1.24+
+ const useGstGL = isGstVersionAtLeast(1, 24);
 @@ -107,7 +107,10 @@ const HanabiRenderer = GObject.registerClass(
                  if (!activeWindow) {
                      this._buildUI();
