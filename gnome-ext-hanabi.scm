@@ -52,7 +52,7 @@
                 (wrap-program renderer
                   `("GI_TYPELIB_PATH" = (,(or gi-typelib-path "")))
                   `("GST_PLUGIN_SYSTEM_PATH" = (,(or gst-plugin-path "")))
-                  `("GSK_RENDERER" = ("ngl")))))))))
+                  `("GDK_DEBUG" = ("vulkan-disable")))))))))
     (home-page "https://github.com/jeffshee/gnome-ext-hanabi")
     (synopsis "Live Wallpaper for GNOME")
     (description "Hanabi (fireworks) is a live wallpaper extension for GNOME Shell.
