@@ -7,7 +7,28 @@ index 1234567..89abcdef 100644
  // Support for dmabus and graphics offload is available from Gtk 4.14+
  // FIXME: Disabled for now as it has issue with Ubuntu 24.04
 -const haveGraphicsOffload = isGtkVersionAtLeast(4, 14) && false;
-+const haveGraphicsOffload = isGtkVersionAtLeast(4, 14);
++const haveGraphicsOffload = isGtkVersionAtLeast(4, 14) && false;
  
  // Use glsinkbin for Gst 1.24+
  const useGstGL = isGstVersionAtLeast(1, 24);
+@@ -107,7 +107,10 @@ const HanabiRenderer = GObject.registerClass(
+                 if (!activeWindow) {
+                     this._buildUI();
+                     this._hanabiWindows.forEach(window => {
+-                        window.present();
++                        GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
++                            window.present();
++                            return GLib.SOURCE_REMOVE;
++                        });
+                     });
+                 }
+             });
+@@ -282,7 +285,8 @@ const HanabiRenderer = GObject.registerClass(
+                 let picture = new Gtk.Picture({
+                     paintable: this._sharedPaintable,
+                     hexpand: true,
+                     vexpand: true,
++                    visible: true,
+                 });
+ 
+                 if (haveContentFit)
