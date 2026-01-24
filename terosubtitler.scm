@@ -14,6 +14,7 @@
   #:use-module (gnu packages xml)
   #:use-module (gnu packages hunspell)
   #:use-module (gnu packages ocr)
+  #:use-module (gnu packages machine-learning)
   #:use-module (gnu packages pkg-config)
   #:use-module (gnu packages tls)
   #:use-module (gnu packages base)
@@ -449,15 +450,16 @@ Lazarus applications.")
                                                  (let ((lib (string-append path "/lib")))
                                                    (if (and (string? path) (file-exists? lib)) lib #f))))
                                              inputs))
-                     (ffmpeg (assoc-ref inputs "ffmpeg"))
                      (mpv (assoc-ref inputs "mpv"))
                      (tesseract-ocr (assoc-ref inputs "tesseract-ocr"))
-                     (ytdlp (assoc-ref inputs "yt-dlp")))
+                     (ytdlp (assoc-ref inputs "yt-dlp"))
+                     (whisper-cpp (assoc-ref inputs "whisper-cpp")))
                 (wrap-program bin
                   `("PATH" ":" prefix (,(string-append ffmpeg "/bin")
                                        ,(string-append mpv "/bin")
                                        ,(string-append tesseract-ocr "/bin")
-                                       ,(string-append ytdlp "/bin")))
+                                       ,(string-append ytdlp "/bin")
+                                       ,(string-append whisper-cpp "/bin")))
                   `("LD_LIBRARY_PATH" ":" prefix ,lib-dirs))))))))
     (native-inputs
      `(("lazarus" ,lazarus)
@@ -502,6 +504,7 @@ Lazarus applications.")
            ffmpeg
            tesseract-ocr
            yt-dlp
+           whisper-cpp
            hunspell
            openssl))
     (home-page "https://github.com/URUWorks/TeroSubtitler")
