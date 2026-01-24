@@ -193,11 +193,11 @@ files.")
     (method git-fetch)
     (uri (git-reference
           (url "https://github.com/URUWorks/TeroSubtitler")
-          (commit "b5268871178828f4da9e9ed8d8122b9bb59d9810")))
+          (commit "e75a0bb45b1f0f357128bc7773bff75fb427f1bb")))
     (file-name "terosubtitler-1.0.2.0-checkout")
     (sha256
      (base32
-      "0r8bc9ri5m3isklq1dg75rdz6inxq7pam0xyn0jrfkxc1s6zffkx"))))
+      "0c05q69n69lzd7sllad6kjs6dyaqn5sj8nrbk3jqh9wq99z44ii9"))))
 
 (define-public lazarus-uw-bluray-pgs-parser
   (package
