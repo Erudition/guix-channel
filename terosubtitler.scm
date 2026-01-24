@@ -356,6 +356,12 @@ Lazarus applications.")
                                 "use/UW_BlurayPGSParser")
               (copy-recursively (assoc-ref inputs "uw-mpv-player-src")
                                 "use/UW_MPVPlayer")))
+          (add-after 'unpack-submodules 'patch-lfm
+            (lambda _
+              (for-each (lambda (lfm)
+                          (substitute* lfm
+                            (("^.*SnapOptions\\..*$") "")))
+                        (find-files "." "\\.lfm$"))))
           (add-before 'build 'setup-lazarus
             (lambda* (#:key inputs #:allow-other-keys)
               (setenv "HOME" (getcwd))
