@@ -191,7 +191,7 @@ files.")
   (origin
     (method git-fetch)
     (uri (git-reference
-          (url "https://github.com/URUWorks/TeroSubtitler")
+          (url "file:///home/adroit/Gemini_Projects/TeroSubtitler")
           (commit "e75a0bb45b1f0f357128bc7773bff75fb427f1bb")))
     (file-name "terosubtitler-1.0.2.0-checkout")
     (sha256
