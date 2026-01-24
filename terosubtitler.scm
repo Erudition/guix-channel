@@ -188,15 +188,9 @@ files.")
     (license license:lgpl2.1+)))
 
 (define %terosubtitler-source
-  (origin
-    (method git-fetch)
-    (uri (git-reference
-          (url "file:///home/adroit/Gemini_Projects/TeroSubtitler")
-          (commit "e75a0bb45b1f0f357128bc7773bff75fb427f1bb")))
-    (file-name "terosubtitler-1.0.2.0-checkout")
-    (sha256
-     (base32
-      "0c05q69n69lzd7sllad6kjs6dyaqn5sj8nrbk3jqh9wq99z44ii9"))))
+  (local-file "/home/adroit/Gemini_Projects/TeroSubtitler"
+              "terosubtitler-checkout"
+              #:recursive? #t))
 
 (define-public lazarus-uw-bluray-pgs-parser
   (package
