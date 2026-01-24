@@ -14,6 +14,7 @@
   #:use-module (gnu packages xml)
   #:use-module (gnu packages hunspell)
   #:use-module (gnu packages ocr)
+  #:use-module (gnu packages machine-learning)
   #:use-module (gnu packages pkg-config)
   #:use-module (gnu packages tls)
   #:use-module (gnu packages base)
@@ -192,11 +193,11 @@ files.")
     (method git-fetch)
     (uri (git-reference
           (url "https://github.com/URUWorks/TeroSubtitler")
-          (commit "2c3e176b533ce685db68d45ab283cce141562611")))
+          (commit "b5268871178828f4da9e9ed8d8122b9bb59d9810")))
     (file-name "terosubtitler-1.0.2.0-checkout")
     (sha256
      (base32
-      "0n65f5jfmh46khqj83mdg4905qmy26b1wkk7dysajfqxipjn49k4"))))
+      "0r8bc9ri5m3isklq1dg75rdz6inxq7pam0xyn0jrfkxc1s6zffkx"))))
 
 (define-public lazarus-uw-bluray-pgs-parser
   (package
@@ -458,12 +459,14 @@ Lazarus applications.")
                      (ffmpeg (assoc-ref inputs "ffmpeg"))
                      (mpv (assoc-ref inputs "mpv"))
                      (tesseract-ocr (assoc-ref inputs "tesseract-ocr"))
-                     (ytdlp (assoc-ref inputs "yt-dlp")))
+                     (ytdlp (assoc-ref inputs "yt-dlp"))
+                     (python-faster-whisper (assoc-ref inputs "python-faster-whisper")))
                 (wrap-program bin
                   `("PATH" ":" prefix (,(string-append ffmpeg "/bin")
                                        ,(string-append mpv "/bin")
                                        ,(string-append tesseract-ocr "/bin")
-                                       ,(string-append ytdlp "/bin")))
+                                       ,(string-append ytdlp "/bin")
+                                       ,(string-append python-faster-whisper "/bin")))
                   `("LD_LIBRARY_PATH" ":" prefix ,lib-dirs))))))))
     (native-inputs
      `(("lazarus" ,lazarus)
@@ -508,6 +511,7 @@ Lazarus applications.")
            ffmpeg
            tesseract-ocr
            yt-dlp
+           python-faster-whisper
            hunspell
            openssl))
     (home-page "https://github.com/URUWorks/TeroSubtitler")
