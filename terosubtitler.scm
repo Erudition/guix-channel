@@ -14,7 +14,6 @@
   #:use-module (gnu packages xml)
   #:use-module (gnu packages hunspell)
   #:use-module (gnu packages ocr)
-  #:use-module (gnu packages machine-learning)
   #:use-module (gnu packages pkg-config)
   #:use-module (gnu packages tls)
   #:use-module (gnu packages base)
@@ -459,14 +458,12 @@ Lazarus applications.")
                      (ffmpeg (assoc-ref inputs "ffmpeg"))
                      (mpv (assoc-ref inputs "mpv"))
                      (tesseract-ocr (assoc-ref inputs "tesseract-ocr"))
-                     (ytdlp (assoc-ref inputs "yt-dlp"))
-                     (python-faster-whisper (assoc-ref inputs "python-faster-whisper")))
+                     (ytdlp (assoc-ref inputs "yt-dlp")))
                 (wrap-program bin
                   `("PATH" ":" prefix (,(string-append ffmpeg "/bin")
                                        ,(string-append mpv "/bin")
                                        ,(string-append tesseract-ocr "/bin")
-                                       ,(string-append ytdlp "/bin")
-                                       ,(string-append python-faster-whisper "/bin")))
+                                       ,(string-append ytdlp "/bin")))
                   `("LD_LIBRARY_PATH" ":" prefix ,lib-dirs))))))))
     (native-inputs
      `(("lazarus" ,lazarus)
@@ -511,7 +508,6 @@ Lazarus applications.")
            ffmpeg
            tesseract-ocr
            yt-dlp
-           python-faster-whisper
            hunspell
            openssl))
     (home-page "https://github.com/URUWorks/TeroSubtitler")
