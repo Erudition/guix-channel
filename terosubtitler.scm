@@ -192,11 +192,11 @@ files.")
     (method git-fetch)
     (uri (git-reference
           (url "https://github.com/URUWorks/TeroSubtitler")
-          (commit "1.0.2.0")))
+          (commit "2c3e176b533ce685db68d45ab283cce141562611")))
     (file-name "terosubtitler-1.0.2.0-checkout")
     (sha256
      (base32
-      "02b87hvsd3csxarbwlwkch5bhf0vp0lsd19jd4nj5q3akn2vrjqs"))))
+      "0n65f5jfmh46khqj83mdg4905qmy26b1wkk7dysajfqxipjn49k4"))))
 
 (define-public lazarus-uw-bluray-pgs-parser
   (package
@@ -359,8 +359,9 @@ Lazarus applications.")
           (add-after 'unpack-submodules 'patch-lfm
             (lambda _
               (for-each (lambda (lfm)
+                          (format #t "Patching ~a...~%" lfm)
                           (substitute* lfm
-                            (("^.*SnapOptions\\..*$") "")))
+                            (("^.*SnapOptions.*$") "")))
                         (find-files "." "\\.lfm$"))))
           (add-before 'build 'setup-lazarus
             (lambda* (#:key inputs #:allow-other-keys)
