@@ -188,7 +188,7 @@ files.")
     (license license:lgpl2.1+)))
 
 (define %terosubtitler-source
-  (local-file "/home/adroit/Gemini_Projects/TeroSubtitler"
+  (local-file "../../Gemini_Projects/TeroSubtitler"
               "terosubtitler-checkout"
               #:recursive? #t))
 
