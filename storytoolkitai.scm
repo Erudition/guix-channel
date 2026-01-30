@@ -25,6 +25,7 @@
   #:use-module (gnu packages image)
   #:use-module (gnu packages image-processing)
   #:use-module (gnu packages maths)
+  #:use-module (gnu packages databases)
   #:use-module (gnu packages freedesktop)
   #:use-module (gnu packages glib)
   #:use-module (gnu packages gtk))
@@ -459,8 +460,9 @@
       #:phases
       #~(modify-phases %standard-phases
           (delete 'sanity-check))))
-    (propagated-inputs (list python-optuna) (list python-optuna)
-     (list python-pyannote-core
+    (propagated-inputs
+     (list python-optuna
+           python-pyannote-core
            python-pyyaml
            python-scikit-learn
            python-filelock
@@ -609,6 +611,7 @@
            python-pyannote-core
            python-pyannote-database
            python-pyannote-pipeline
+           python-pyannote-metrics
            python-torch-audiomentations
            python-opentelemetry-api
            python-opentelemetry-sdk
@@ -804,3 +807,31 @@ exec python3 -m storytoolkitai \"$@\"")))
     (synopsis "AI toolkit for storytelling")
     (description "StoryToolkitAI is a tool to help with storytelling using AI.")
     (license license:agpl3)))
+(define-public python-pyannote-metrics
+  (package
+    (name "python-pyannote-metrics")
+    (version "3.2.1")
+    (source
+     (origin
+       (method url-fetch)
+       (uri (pypi-uri "pyannote.metrics" version))
+       (sha256
+        (base32 "0p7f404r1j378m0r3s0d9146b216yd55ykysx6l9c3jmldal40h8"))))
+    (build-system pyproject-build-system)
+    (arguments (list #:tests? #f))
+    (propagated-inputs
+     (list python-pyannote-core
+           python-pyannote-database
+           python-pandas
+           python-scipy
+           python-scikit-learn
+           python-docopt
+           python-tabulate
+           python-matplotlib
+           python-sympy))
+    (native-inputs (list python-setuptools python-wheel))
+    (home-page "https://github.com/pyannote/pyannote-metrics")
+    (synopsis "A toolkit for reproducible evaluation, diagnostic, and visualization of speaker diarization systems")
+    (description "Pyannote.metrics is a toolkit for reproducible evaluation, diagnostic, and visualization of speaker diarization systems.")
+    (license license:expat)))
+
