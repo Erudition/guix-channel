@@ -750,6 +750,7 @@
                (mkdir-p site)
                (copy-recursively "storytoolkitai" (string-append site "/storytoolkitai"))
                (copy-file "requirements.txt" (string-append site "/requirements.txt"))
+               (copy-file "version.py" (string-append site "/version.py"))
                (mkdir-p bin)
                (with-output-to-file (string-append bin "/storytoolkitai")
                  (lambda _
