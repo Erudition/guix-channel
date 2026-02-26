@@ -189,9 +189,15 @@ files.")
     (license license:lgpl2.1+)))
 
 (define %terosubtitler-source
-  (local-file "../../Gemini_Projects/TeroSubtitler"
-              "terosubtitler-checkout"
-              #:recursive? #t))
+  (origin
+    (method git-fetch)
+    (uri (git-reference
+          (url "https://github.com/URUWorks/TeroSubtitler")
+          (commit "1.0.2.0")))
+    (file-name (git-file-name "terosubtitler" "1.0.2.0"))
+    (sha256
+     (base32
+      "02b87hvsd3csxarbwlwkch5bhf0vp0lsd19jd4nj5q3akn2vrjqs"))))
 
 (define-public lazarus-uw-bluray-pgs-parser
   (package
