@@ -11,12 +11,14 @@
   #:use-module (gnu packages python-xyz)
   #:use-module (gnu packages python-web)
   #:use-module (gnu packages python-build)
+  #:use-module (gnu packages bash)
   #:use-module (gnu packages linux)
   #:use-module (gnu packages check)
   #:use-module (gnu packages python-check)
   #:use-module (gnu packages dns)
   #:use-module (gnu packages monitoring)
   #:use-module (gnu packages databases)
+  #:use-module (gnu packages image)
   #:use-module (gnu packages python-crypto))
 
 (define-public python-typing-inspection
@@ -185,7 +187,8 @@
              (commit "b6f20b260585cdf8e80e37395331de4bdf07447f")))
        (file-name (git-file-name name version))
        (sha256
-        (base32 "05c1qm31yiy679q15xyjqvzvp4p07szidpmbja8wq5fw1fi65nwy"))))
+        (base32 "05c1qm31yiy679q15xyjqvzvp4p07szidpmbja8wq5fw1fi65nwy"))
+       (patches (list (local-file "patches/wayland-mcp-remove-cloud-vlm.patch")))))
     (build-system python-build-system)
     (arguments
      (list
@@ -193,6 +196,19 @@
       #:phases
       #~(modify-phases %standard-phases
           (delete 'build)
+          (add-after 'unpack 'patch-paths
+            (lambda* (#:key inputs #:allow-other-keys)
+              (let ((grim (search-input-file inputs "/bin/grim"))
+                    (slurp (search-input-file inputs "/bin/slurp"))
+                    (evemu (search-input-file inputs "/bin/evemu-event")))
+                (substitute* "wayland_mcp/app.py"
+                  (("shutil\\.which\\(\"slurp\"\\)") (format #f "~s" slurp))
+                  (("shutil\\.which\\(\"grim\"\\)") (format #f "~s" grim))
+                  (("\\[\"slurp\"\\]") (format #f "[~s]" slurp))
+                  (("\\[\"grim\"") (format #f "[~s" grim)))
+                (substitute* '("wayland_mcp/keyboard_utils.py"
+                               "wayland_mcp/mouse_utils.py")
+                  (("\"evemu-event\"") (format #f "~s" evemu))))))
           (replace 'install
             (lambda* (#:key outputs inputs #:allow-other-keys)
               (let* ((out (assoc-ref outputs "out"))
@@ -209,12 +225,29 @@
                   (lambda _
                     (format #t "#!~a~%import sys~%from wayland_mcp.server_mcp import main~%if __name__ == '__main__':~%    sys.exit(main())~%"
                             python-bin)))
-                (chmod (string-append bin "/wayland-mcp") #o755)))))))
-    (propagated-inputs
+                (chmod (string-append bin "/wayland-mcp") #o755))))
+          (add-after 'install 'wrap-program
+            (lambda* (#:key inputs outputs #:allow-other-keys)
+              (let* ((out (assoc-ref outputs "out"))
+                     (bin (string-append out "/bin/wayland-mcp"))
+                     (pythonpath (getenv "GUIX_PYTHONPATH"))
+                     (path (string-join
+                            (list (string-append (assoc-ref inputs "grim") "/bin")
+                                  (string-append (assoc-ref inputs "slurp") "/bin")
+                                  (string-append (assoc-ref inputs "python-evemu") "/bin"))
+                            ":")))
+                (wrap-program bin
+                  `("GUIX_PYTHONPATH" ":" prefix (,pythonpath))
+                  `("PATH" ":" prefix (,path)))))))))
+    (inputs
      (list python-requests
            python-fastmcp
            python-pillow
-           python-evemu))
+           python-evemu
+           grim
+           slurp))
+    (native-inputs
+     (list bash-minimal))
     (home-page "https://github.com/kurojs/wayland-mcp")
     (synopsis "MCP server for Wayland automation")
     (description "Model Context Protocol server for Wayland desktop automation.")

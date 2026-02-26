@@ -1,0 +1,954 @@
+diff --git a/wayland_mcp/__init__.py b/wayland_mcp/__init__.py
+index a614d3c..626dcd0 100644
+--- a/wayland_mcp/__init__.py
++++ b/wayland_mcp/__init__.py
+@@ -1,13 +1,5 @@
+-"""Wayland MCP package initialization."""
+-from .app import VLMAgent, capture_screenshot
+-from .add_rulers import add_rulers
++"""Wayland MCP package."""
++from .app import capture_screenshot
+ from .mouse_utils import MouseController
+-from .server_mcp import main
+-
+-__all__ = [
+-    'VLMAgent',
+-    'capture_screenshot',
+-    'add_rulers',
+-    'MouseController',
+-    'main'
+-]
++from .keyboard_utils import KeyboardController
++from .screen_utils import ScreenController
+diff --git a/wayland_mcp/app.py b/wayland_mcp/app.py
+index c79ed5b..148fef6 100644
+--- a/wayland_mcp/app.py
++++ b/wayland_mcp/app.py
+@@ -1,8 +1,6 @@
+ """MCP Server application for Wayland interactions.
+ This module provides core functionality for the Wayland MCP server including:
+ - Screenshot capture with various backends
+-- Vision-Language Model (VLM) integration for image analysis
+-- Mouse control utilities
+ - Environment configuration for optimal capture performance
+ """
+ import os
+@@ -10,8 +8,7 @@ import shutil
+ import subprocess
+ import time
+ import logging
+-import base64
+-import requests
++
+ def configure_environment():
+     """Set up optimized capture environment"""
+     env = os.environ.copy()
+@@ -35,11 +32,12 @@ def configure_environment():
+     # Create silent sound file if needed
+     sound_file = os.path.join(sound_dir, "screen-capture.oga")
+     if not os.path.exists(sound_file):
+-        # Create an empty file using 'with' to ensure it's closed
+-        with open(sound_file, "w", encoding="utf-8") as _:  # Use _ for unused variable
+-            pass  # Just create the file
++        # Create an empty file
++        with open(sound_file, "w", encoding="utf-8") as _:
++            pass
+     env["SOUND_THEME"] = "silent"
+     return env
++
+ def minimize_effects():
+     """Reduce visual and sound effects"""
+     try:
+@@ -62,6 +60,7 @@ def minimize_effects():
+         time.sleep(0.3)  # Allow settings to apply
+     except subprocess.CalledProcessError as e:
+         logging.error("Error minimizing effects: %s", e)
++
+ def restore_effects():
+     """Restore original system settings"""
+     try:
+@@ -81,7 +80,7 @@ def restore_effects():
+         )
+     except subprocess.CalledProcessError as e:
+         logging.error("Error restoring effects: %s", e)
+-# pylint: disable=too-many-branches
++
+ def capture_screenshot(output_path=None, mode="auto", geometry=None, include_mouse=True):
+     """
+     Capture screenshot with optional region selection and mouse cursor
+@@ -102,25 +101,27 @@ def capture_screenshot(output_path=None, mode="auto", geometry=None, include_mou
+         # Force mute as backup
+         subprocess.run(
+             ["pactl", "set-sink-mute", "@DEFAULT_SINK@", "1"], env=env, check=False
+-        )  # Muting failure isn't critical
++        )
++        
+         # 1. First try ksnip (if available)
+         if os.path.exists("/usr/bin/ksnip"):
+             try:
+                 cmd = ["ksnip", "-f", output_path, "-m"]
+                 if include_mouse:
+-                    cmd.append("-c")  # Include cursor
++                    cmd.append("-c")
+                 result = subprocess.run(
+                     cmd,
+                     env=env,
+                     capture_output=True,
+                     timeout=15,
+-                    check=False,  # Don't check, handle return code below
++                    check=False,
+                 )
+                 if result.returncode == 0:
+                     return {"success": True, "filename": output_path}
+             except subprocess.TimeoutExpired as e:
+                 logging.error("ksnip failed: %s", e)
+-        # 2. Fallback to gnome-screenshot (minimized flash)
++        
++        # 2. Fallback to gnome-screenshot
+         try:
+             cmd = ["gnome-screenshot", "-f", output_path]
+             if include_mouse:
+@@ -129,345 +130,33 @@ def capture_screenshot(output_path=None, mode="auto", geometry=None, include_mou
+                 cmd,
+                 env=env,
+                 capture_output=True,
+-                timeout=30,  # Increased timeout for slower systems
+-                check=False,  # Don't check, handle return code below
++                timeout=30,
++                check=False,
+             )
+             if result.returncode == 0:
+                 return {"success": True, "filename": output_path}
+-        except subprocess.TimeoutExpired as e:
+-            logging.error("gnome-screenshot failed: %s", e)
+-        except FileNotFoundError as e:
+-            logging.warning("gnome-screenshot not found: %s", e)
+-        except subprocess.CalledProcessError as e:
+-            logging.warning("gnome-screenshot returned error code %d: %s", e.returncode, e.stderr.decode() if e.stderr else "No stderr")
+-        # Handle region/window selection
+-        if mode == "region" and not geometry:
+-            try:
+-                if shutil.which("slurp"):
+-                    result = subprocess.run(
+-                        ["slurp"], capture_output=True, text=True, check=False
+-                    )  # Don't check, handle return code
+-                    if result.returncode == 0:
+-                        geometry = result.stdout.strip()
+-                elif shutil.which("xrandr"):
+-                    # Basic X11 region selection fallback
+-                    result = subprocess.run(
+-                        ["xrandr | grep ' connected'"],
+-                        shell=True,
+-                        capture_output=True,
+-                        check=False,
+-                    )  # Don't check, handle return code
+-                    # Parse output to get screen geometry (needs implementation)
+-            except (subprocess.CalledProcessError, subprocess.TimeoutExpired, ValueError) as e:
+-                logging.warning("Region selection failed: %s", e)
++        except Exception as e:
++            logging.warning("gnome-screenshot failed: %s", e)
++            
+         # 3. Final fallback to grim if on Wayland
+         if os.environ.get("WAYLAND_DISPLAY") and shutil.which("grim"):
+             try:
+-                if include_mouse:
+-                    logging.warning("Grim doesn't support cursor capture - mouse won't be visible")
+                 cmd = ["grim", output_path]
+                 if mode == "region" and shutil.which("slurp"):
+-                    cmd = ["grim", "-g", "$(slurp)", output_path]
++                    # Use actual slurp output
++                    slurp_proc = subprocess.run(["slurp"], capture_output=True, text=True)
++                    if slurp_proc.returncode == 0:
++                        cmd = ["grim", "-g", slurp_proc.stdout.strip(), output_path]
+                 subprocess.run(
+                     cmd, env=env, check=True, timeout=20
+-                )  # Increased timeout for slower systems
+-                return {"success": True, "filename": output_path}
+-            except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+-                logging.error("Grim fallback failed: %s", e)
+-            except FileNotFoundError as e:
+-                logging.warning("Grim not found: %s", e)
+-        # 4. Fallback to spectacle (KDE screenshot tool)
+-        if shutil.which("spectacle"):
+-            try:
+-                cmd = ["spectacle", "--fullscreen", "--background", "--nonotify", "--output", output_path]
+-                result = subprocess.run(
+-                    cmd,
+-                    env=env,
+-                    capture_output=True,
+-                    timeout=30,
+-                    check=False,
+                 )
+-                if result.returncode == 0:
+-                    return {"success": True, "filename": output_path}
+-                else:
+-                    logging.error("spectacle failed with return code: %d, stderr: %s", result.returncode, result.stderr.decode() if result.stderr else "No stderr")
+-            except subprocess.TimeoutExpired as e:
+-                logging.error("spectacle failed: %s", e)
+-            except FileNotFoundError as e:
+-                logging.warning("spectacle not found: %s", e)
++                return {"success": True, "filename": output_path}
+             except Exception as e:
+-                logging.error("spectacle failed with exception: %s", e)
++                logging.error("Grim fallback failed: %s", e)
++                
+         return {"success": False, "error": "All capture methods failed"}
+     finally:
+         restore_effects()
+         subprocess.run(
+             ["pactl", "set-sink-mute", "@DEFAULT_SINK@", "0"], env=env, check=False
+-        )  # Unmuting failure isn't critical
+-class VLMAgent:
+-    """Agent for interacting with Vision-Language Models (VLMs).
+-    Handles image analysis and comparison using VLM APIs.
+-    Requires an API key for authentication.
+-    """
+-    def __init__(self, api_key=None, provider=None):
+-        """Initialize with API key validation and provider selection
+-        
+-        Args:
+-            api_key: API key for the VLM service
+-            provider: 'openrouter' or 'gemini' (defaults to 'openrouter')
+-        """
+-        self.api_key = api_key
+-        self.provider = provider or os.environ.get("VLM_PROVIDER", "openrouter")
+-        if not api_key:
+-            logging.warning("VLMAgent initialized without API key!")
+-        else:
+-            logging.info("VLMAgent initialized with valid API key for provider: %s", self.provider)
+-    def compare_images(
+-        self,
+-        img1_path: str,
+-        img2_path: str,
+-    ) -> str:
+-        """Compare two images using VLM analysis"""
+-        if not self.api_key:
+-            logging.error("No API key configured for VLMAgent")
+-            return "Error: No API key configured for VLMAgent"
+-        # Verify both images exist
+-        for img_path in [img1_path, img2_path]:
+-            if not os.path.exists(img_path):
+-                logging.error("Image file not found: %s", img_path)
+-                return f"Error: Image file not found - {img_path}"
+-        # Encode both images
+-        encoded_images = []
+-        for img_path in [img1_path, img2_path]:
+-            try:
+-                with open(img_path, "rb") as image_file:
+-                    encoded_images.append(
+-                        base64.b64encode(image_file.read()).decode("utf-8")
+-                    )
+-            except (IOError, OSError) as e:
+-                logging.error("Failed to encode image %s: %s", img_path, str(e))
+-                return f"Error: Failed to process image {img_path} - {str(e)}"
+-        # Prepare request matching test script
+-        headers = {
+-            "Authorization": f"Bearer {self.api_key}",
+-            "Content-Type": "application/json",
+-            "HTTP-Referer": "https://github.com/your-repo",
+-            "X-Title": "Wayland MCP"
+-        }
+-        # Match the toy script's prompt structure exactly
+-        payload = {
+-            "model": "qwen/qwen2.5-vl-72b-instruct:free",
+-            "messages": [
+-                {
+-                    "role": "user",
+-                    "content": [
+-                        {"type": "text", "text": "Compare these two screenshots in detail."},
+-                        {"type": "text", "text": "Focus on:"},
+-                        {"type": "text", "text": "1. Application windows and their content"},
+-                        {"type": "text", "text": "2. Layout and positioning differences"},
+-                        {"type": "text", "text": "3. Any visual changes between them"},
+-                        {
+-                            "type": "image_url",
+-                            "image_url": {
+-                                "url": f"data:image/png;base64,{encoded_images[0]}",
+-                                "detail": "high"
+-                            }
+-                        },
+-                        {
+-                            "type": "image_url",
+-                            "image_url": {
+-                                "url": f"data:image/png;base64,{encoded_images[1]}",
+-                                "detail": "high"
+-                            }
+-                        }
+-                    ]
+-                }
+-            ],
+-            "max_tokens": 2000
+-        }
+-        try:
+-            response = requests.post(
+-                "https://openrouter.ai/api/v1/chat/completions",
+-                headers=headers,
+-                json=payload,
+-                timeout=60
+-            )
+-            if response.status_code == 200:
+-                return response.json()["choices"][0]["message"]["content"]
+-            return (
+-                f"API error: {response.status_code} - "
+-                f"{response.text}"
+-            )
+-        except requests.exceptions.RequestException as e:
+-            return f"Request failed: {str(e)}"
+-    def analyze_image(self, image_path: str, prompt: str) -> str:
+-        """Analyze a single image using VLM analysis"""
+-        return self.analyze_screenshot(image_path, prompt)
+-# pylint: disable=too-many-locals
+-    def analyze_screenshot(self, image_path: str, prompt: str) -> str:
+-        """Analyze screenshot using VLM (OpenRouter or Gemini)
+-        Args:
+-            image_path: Path to image file
+-            prompt: Text prompt for analysis
+-        Returns:
+-            str: Analysis result or error message
+-        """
+-        if self.provider == "gemini":
+-            return self._analyze_with_gemini(image_path, prompt)
+-        return self._analyze_with_openrouter(image_path, prompt)
+-    
+-    def _analyze_with_gemini(self, image_path: str, prompt: str) -> str:
+-        """Analyze screenshot using Google Gemini API"""
+-        # Validate inputs
+-        if not os.path.exists(image_path):
+-            error_msg = f"Error: Image file not found - {image_path}"
+-            logging.error(error_msg)
+-            return error_msg
+-        
+-        # Encode image
+-        try:
+-            with open(image_path, "rb") as image_file:
+-                file_size = os.path.getsize(image_path)
+-                logging.info("Processing image: %s (%d bytes)", image_path, file_size)
+-                encoded_image = base64.b64encode(image_file.read()).decode("utf-8")
+-                logging.info("Image encoded successfully (%d chars)", len(encoded_image))
+-        except (IOError, OSError) as e:
+-            error_msg = f"Error: Failed to process image - {str(e)}"
+-            logging.error(error_msg)
+-            return error_msg
+-        
+-        # Use Gemini API
+-        model = os.environ.get("VLM_MODEL", "gemini-2.5-flash")
+-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+-        
+-        headers = {
+-            "Content-Type": "application/json"
+-        }
+-        
+-        payload = {
+-            "contents": [{
+-                "parts": [
+-                    {"text": prompt},
+-                    {
+-                        "inline_data": {
+-                            "mime_type": "image/png",
+-                            "data": encoded_image
+-                        }
+-                    }
+-                ]
+-            }]
+-        }
+-        
+-        logging.info("Sending Gemini request with prompt: %s", prompt)
+-        try:
+-            start_time = time.time()
+-            response = requests.post(
+-                f"{url}?key={self.api_key}",
+-                headers=headers,
+-                json=payload,
+-                timeout=60,
+-            )
+-            elapsed = time.time() - start_time
+-            logging.info("Gemini request completed in %.2fs", elapsed)
+-            
+-            if response.status_code == 200:
+-                try:
+-                    result = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+-                    logging.info("Gemini analysis result: %.200s...", result)
+-                    return result
+-                except KeyError as e:
+-                    error_msg = f"Gemini API response format error: {str(e)}. Full response: {response.text}"
+-                    logging.error(error_msg)
+-                    return error_msg
+-            
+-            error_msg = f"Gemini API error {response.status_code}"
+-            logging.error("%s: %s", error_msg, response.text)
+-            return f"{error_msg}\nResponse details: {response.text}"
+-        except requests.exceptions.RequestException as e:
+-            logging.error("Gemini request failed: %s", str(e))
+-            return f"Gemini request failed: {str(e)}"
+-    
+-    def _analyze_with_openrouter(self, image_path: str, prompt: str) -> str:
+-        """Analyze screenshot using OpenRouter API"""
+-        # Validate inputs
+-        if not os.path.exists(image_path):
+-            error_msg = f"Error: Image file not found - {image_path}"
+-            logging.error(error_msg)
+-            return error_msg
+-        # Encode image
+-        try:
+-            with open(image_path, "rb") as image_file:
+-                file_size = os.path.getsize(image_path)
+-                logging.info("Processing image: %s (%d bytes)", image_path, file_size)
+-                encoded_image = base64.b64encode(image_file.read()).decode("utf-8")
+-                logging.info("Image encoded successfully (%d chars)", len(encoded_image))
+-        except (IOError, OSError) as e:
+-            error_msg = f"Error: Failed to process image - {str(e)}"
+-            logging.error(error_msg)
+-            return error_msg
+-        # Break long dictionary assignment
+-        auth_header = f"Bearer {self.api_key.strip()}"
+-        headers = {
+-            "Authorization": auth_header,
+-            "HTTP-Referer": "https://github.com/your-repo",  # Keep this line short
+-            "X-Title": "Wayland MCP",
+-            "Content-Type": "application/json",
+-        }
+-        logging.info("Using API key starting with: %s...", self.api_key[:8])
+-        payload = {
+-            "model": os.environ.get(
+-                "VLM_MODEL", "moonshotai/kimi-vl-a3b-thinking:free"
+-            ),
+-            "messages": [
+-                {
+-                    "role": "user",
+-                    "content": [
+-                        {"type": "text", "text": prompt},
+-                        {
+-                            "type": "image_url",
+-                            # Break long line
+-                            "image_url": f"data:image/png;base64,{encoded_image}",
+-                        },
+-                    ],
+-                }
+-            ],
+-            "max_tokens": 1000,
+-        }
+-        logging.info("Sending VLM request with prompt: %s", prompt)
+-        try:
+-            start_time = time.time()
+-            response = requests.post(
+-                "https://openrouter.ai/api/v1/chat/completions",
+-                headers=headers,
+-                json=payload,
+-                timeout=60,
+-            )
+-            elapsed = time.time() - start_time
+-            logging.info("VLM request completed in %.2fs", elapsed)
+-            if response.status_code == 200:
+-                try:
+-                    result = response.json()["choices"][0]["message"]["content"]
+-                    logging.info("VLM analysis result: %.200s...", result)
+-                    return result
+-                except KeyError as e:
+-                    error_msg = (f"VLM API response format error: {str(e)}. "
+-                               f"Full response: {response.text}")
+-                    if "quota" in response.text.lower():
+-                        error_msg = ("API quota exceeded. Please switch to "
+-                                   "a different API key or wait until quota resets.")
+-                    logging.error(error_msg)
+-                    return error_msg
+-            # Handle API errors with more specific messages
+-            error_msg = f"VLM API error {response.status_code}"
+-            if response.status_code == 429:
+-                error_msg = ("API quota exceeded. Please switch to "
+-                           "a different API key or wait until quota resets.")
+-            elif "quota" in response.text.lower():
+-                error_msg = ("API quota exceeded. Please switch to "
+-                           "a different API key or wait until quota resets.")
+-            logging.error("%s: %s", error_msg, response.text)
+-            return (f"{error_msg}\n"
+-                   f"Response details: {response.text}")
+-        except requests.exceptions.RequestException as e:
+-            logging.error("VLM request failed: %s", str(e))
+-            # Return f-string directly to reduce local variables
+-            return f"VLM request failed: {str(e)}"
++        )
+diff --git a/wayland_mcp/screen_utils.py b/wayland_mcp/screen_utils.py
+index 0585edb..5fe7041 100644
+--- a/wayland_mcp/screen_utils.py
++++ b/wayland_mcp/screen_utils.py
+@@ -1,33 +1,14 @@
+-"""ScreenController for capturing and analyzing screenshots using VLM."""
++"""ScreenController for capturing screenshots."""
+ import logging
+-import os
+-
+-from wayland_mcp.app import (
+-    capture_screenshot as capture_func,
+-    VLMAgent,
+-)
++from wayland_mcp.app import capture_screenshot as capture_func
+ from wayland_mcp.add_rulers import add_rulers
+ 
+ class ScreenController:
+-    """Handles screen capture, comparison and analysis using VLM."""
++    """Handles screen capture with measurement rulers."""
+ 
+-    def __init__(self, vlm_agent: VLMAgent = None):
+-        """
+-        Initialize with a VLMAgent instance or None for lazy initialization.
+-        """
+-        self._vlm_agent = vlm_agent
+-        self._vlm_factory = None
+-    
+-    def set_vlm_factory(self, factory_func):
+-        """Set a factory function for lazy VLM initialization."""
+-        self._vlm_factory = factory_func
+-    
+-    @property
+-    def vlm_agent(self):
+-        """Get VLM agent, initializing if needed."""
+-        if self._vlm_agent is None and self._vlm_factory is not None:
+-            self._vlm_agent = self._vlm_factory()
+-        return self._vlm_agent
++    def __init__(self):
++        """Initialize ScreenController."""
++        pass
+ 
+     def capture(self, filename: str = "screenshot.png", include_mouse: bool = True) -> dict:
+         """Capture screenshot with measurement rulers.
+@@ -52,6 +33,7 @@ class ScreenController:
+                 }
+ 
+             try:
++                # Add rulers to help the AI map coordinates
+                 return {
+                     "success": True,
+                     "filename": add_rulers(filename)
+@@ -65,110 +47,3 @@ class ScreenController:
+                 "success": False,
+                 "error": f"Capture failed: {str(e)}"
+             }
+-
+-    def compare(self, img1_path: str, img2_path: str) -> dict:
+-        """Compare two images using VLM.
+-
+-        Args:
+-            img1_path: Path to first image
+-            img2_path: Path to second image
+-
+-        Returns:
+-            dict: {
+-                'success': bool,
+-                'equal': bool (if successful),
+-                'error': str (if failed)
+-            }
+-        """
+-        try:
+-            abs_img1 = os.path.abspath(img1_path)
+-            abs_img2 = os.path.abspath(img2_path)
+-
+-            if not all(os.path.exists(p) for p in (abs_img1, abs_img2)):
+-                return {
+-                    "success": False,
+-                    "error": "Image(s) not found"
+-                }
+-
+-            return {
+-                "success": True,
+-                "equal": self.vlm_agent.compare_images(abs_img1, abs_img2)
+-            }
+-        except (OSError, RuntimeError) as e:
+-            logging.error("Image comparison failed: %s", e)
+-            return {
+-                "success": False,
+-                "error": f"Comparison failed: {str(e)}"
+-            }
+-
+-    def analyze(self, image_path: str, prompt: str) -> dict:
+-        """Analyze screenshot using VLM.
+-
+-        Args:
+-            image_path: Path to image to analyze
+-            prompt: Analysis prompt/question
+-
+-        Returns:
+-            dict: {
+-                'success': bool,
+-                'analysis': str (if successful),
+-                'error': str (if failed)
+-            }
+-        """
+-        try:
+-            analysis = self.vlm_agent.analyze_image(image_path, prompt) or ""
+-            return {
+-                "success": True,
+-                "analysis": analysis
+-            }
+-        except (RuntimeError, ValueError) as e:
+-            logging.error("Image analysis failed: %s", e)
+-            return {
+-                "success": False,
+-                "error": f"Analysis failed: {str(e)}"
+-            }
+-
+-    def capture_and_analyze(self, prompt: str, include_mouse: bool = True) -> dict:
+-        """Capture and analyze screenshot in one operation.
+-
+-        Args:
+-            prompt: Analysis prompt/question
+-            include_mouse: Whether to include mouse cursor (default: True)
+-
+-        Returns:
+-            dict: {
+-                'success': bool,
+-                'filename': str (if successful),
+-                'analysis': str (if successful),
+-                'filesize': int (if successful),
+-                'error': str (if failed)
+-            }
+-        """
+-        try:
+-            result = self.capture(include_mouse=include_mouse)
+-            if not result.get("success"):
+-                return result
+-
+-            filename = result["filename"]
+-            if not os.path.exists(filename):
+-                return {
+-                    "success": False,
+-                    "error": "File not found"
+-                }
+-
+-            analysis = self.analyze(filename, prompt)
+-            if not analysis.get("success"):
+-                return analysis
+-
+-            return {
+-                "success": True,
+-                "filename": filename,
+-                "analysis": analysis["analysis"],
+-                "filesize": os.path.getsize(filename)
+-            }
+-        except (OSError, RuntimeError, ValueError) as e:
+-            logging.error("Capture and analyze failed: %s", e)
+-            return {
+-                "success": False,
+-                "error": f"Operation failed: {str(e)}"
+-            }
+diff --git a/wayland_mcp/server_mcp.py b/wayland_mcp/server_mcp.py
+index f633691..3ed332b 100644
+--- a/wayland_mcp/server_mcp.py
++++ b/wayland_mcp/server_mcp.py
+@@ -2,11 +2,13 @@
+ Provides tools for:
+ - Mouse control (move, click, drag, scroll)
+ - Keyboard input (typing, key presses)
+-- Screenshot capture and analysis
++- Screenshot capture (with measurement rulers)
+ - Action chaining (combining multiple actions)
++
+ Tool Usage:
+ All tools are accessible via the MCP protocol using the @mcp.tool() decorator.
+ Tools can be called individually or chained together.
++
+ Action Chaining Syntax:
+   chain:action1;action2;action3
+ Where actions are in format:
+@@ -14,86 +16,44 @@ Where actions are in format:
+   press:key
+   click:x,y
+   drag:x1,y1:x2,y2
++
+ Example Chains:
+   chain:click:100,200;type:hello;press:Enter
+   chain:drag:50,50:100,100;click:200,200
++
++Note: Vision analysis is handled natively by the multimodal AI client.
+ """
+ import logging
+ import os
+-import json
+ from typing import Optional, Tuple
+ from fastmcp import FastMCP
+ from wayland_mcp.chain_processor import ChainProcessor, register_handler
+ from wayland_mcp.mouse_utils import MouseController
+ from wayland_mcp.keyboard_utils import KeyboardController
+ from wayland_mcp.screen_utils import ScreenController
+-from wayland_mcp.app import VLMAgent
+-# Configuration setup
+-API_KEY = os.environ.get("GEMINI_API_KEY") or os.environ.get("OPENROUTER_API_KEY", "")
+-VLM_PROVIDER = os.environ.get("VLM_PROVIDER", "openrouter")
+-
+-# Debug logging
+-logging.info("=" * 60)
+-logging.info("VLM Configuration:")
+-logging.info("Provider: %s", VLM_PROVIDER)
+-logging.info("API Key found: %s", "Yes" if API_KEY else "No")
+-if API_KEY:
+-    logging.info("API Key starts with: %s...", API_KEY[:15])
+-logging.info("=" * 60)
+ 
+-# Fall back to config file if not in environment
+-if not API_KEY:
+-    def get_config_path() -> str:
+-        """Get config file path from environment or default location."""
+-        return os.path.join(
+-            os.environ.get("MCP_CONFIG_DIR", os.path.expanduser("~/.roo")),
+-            "mcp.json"
+-        )
+-    try:
+-        with open(get_config_path(), encoding="utf-8") as f:
+-            config = json.load(f)
+-            if VLM_PROVIDER == "gemini":
+-                API_KEY = config["mcpServers"]["wayland-screenshot"]["env"]["GEMINI_API_KEY"]
+-            else:
+-                API_KEY = config["mcpServers"]["wayland-screenshot"]["env"]["OPENROUTER_API_KEY"]
+-    except (json.JSONDecodeError, KeyError, IOError) as e:
+-        logging.error("Failed to load API key: %s", e)
+-        API_KEY = ""
+-# Initialize core components using MouseController's built-in detection
++# Initialize core components
+ mouse = MouseController()
+ logging.info("Initialized MouseController with device: %s", mouse.device)
+ keyboard = KeyboardController()
++screen = ScreenController()
+ 
+-# Initialize ScreenController with lazy VLM initialization
+-def get_vlm_agent():
+-    """Lazy initialization of VLM agent with current environment variables."""
+-    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("OPENROUTER_API_KEY", "")
+-    provider = os.environ.get("VLM_PROVIDER", "openrouter")
+-    logging.info("=" * 60)
+-    logging.info("VLM Configuration (lazy init):")
+-    logging.info("Provider: %s", provider)
+-    logging.info("API Key found: %s", "Yes" if api_key else "No")
+-    if api_key:
+-        logging.info("API Key starts with: %s...", api_key[:15])
+-    logging.info("=" * 60)
+-    return VLMAgent(api_key, provider=provider)
+-
+-# Pass None initially, will be initialized on first use
+-screen = ScreenController(None)
+-screen.set_vlm_factory(get_vlm_agent)
+ # Server configuration
+ try:
+     PORT = int(os.environ.get("WAYLAND_MCP_PORT", "4999"))
+ except ValueError:
+     PORT = 4999
++
+ # Logging setup
+ LOG_FILE = "/tmp/wayland-mcp.log"
+ log_handler = logging.FileHandler(LOG_FILE)
+ log_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+ logging.getLogger().addHandler(log_handler)
+ logging.getLogger().setLevel(logging.INFO)
++
+ mcp = FastMCP("Wayland MCP")
+ logging.info("Initialized FastMCP server on port %d", PORT)
++
+ # Mouse control tools
+ @mcp.tool()
+ def move_mouse(x: int, y: int, relative: bool = False) -> dict:
+@@ -115,12 +75,11 @@ def move_mouse(x: int, y: int, relative: bool = False) -> dict:
+         if relative:
+             mouse.move_to(x, y)
+         else:
+-            print("Moving to absolute coordinates")
+-            print(f"Moving to x={x}, y={y}")
+             mouse.move_to_absolute(x, y)
+         return {"success": True}
+     except (RuntimeError, IOError) as e:
+         return {"success": False, "error": str(e)}
++
+ @mcp.tool()
+ def click_mouse() -> dict:
+     """Simulate left mouse click at current position.
+@@ -137,6 +96,7 @@ def click_mouse() -> dict:
+         return {"success": True}
+     except (RuntimeError, IOError) as e:
+         return {"success": False, "error": str(e)}
++
+ @mcp.tool()
+ def drag_mouse(x1: int, y1: int, x2: int, y2: int) -> dict:
+     """Perform drag operation between coordinates.
+@@ -156,6 +116,7 @@ def drag_mouse(x1: int, y1: int, x2: int, y2: int) -> dict:
+         return {"success": True}
+     except (RuntimeError, IOError) as e:
+         return {"success": False, "error": str(e)}
++
+ @mcp.tool()
+ def scroll_mouse(amount: int) -> dict:
+     """Scroll vertically (positive=up, negative=down).
+@@ -167,20 +128,13 @@ def scroll_mouse(amount: int) -> dict:
+         return {"success": True}
+     except (RuntimeError, IOError) as e:
+         return {"success": False, "error": str(e)}
++
+ # Media capture tools
+ @mcp.tool()
+ def capture_screenshot(filename: str = "screenshot.png") -> dict:
+-    """Capture screenshot with measurement rulers."""
++    """Capture screenshot with measurement rulers for AI analysis."""
+     return screen.capture(filename)
+-@mcp.tool()
+-def compare_images(img1_path: str, img2_path: str) -> dict:
+-    """Compare two images using VLM."""
+-    return screen.compare(img1_path, img2_path)
+-@mcp.tool()
+-def analyze_screenshot(image_path: str, prompt: str) -> str:
+-    """Analyze screenshot using VLM."""
+-    result = screen.analyze(image_path, prompt)
+-    return result.get("analysis", "") if result.get("success") else ""
++
+ def _handle_type_action(text: str) -> dict:
+     """Handle typing text using KeyboardController."""
+     try:
+@@ -189,6 +143,7 @@ def _handle_type_action(text: str) -> dict:
+     except (RuntimeError, ValueError) as e:
+         logging.error("Type action failed: %s", e)
+         return {"success": False, "error": str(e)}
++
+ def _handle_press_action(key: str) -> dict:
+     """Handle key press using KeyboardController."""
+     try:
+@@ -197,6 +152,7 @@ def _handle_press_action(key: str) -> dict:
+     except (RuntimeError, ValueError) as e:
+         logging.error("Press action failed: %s", e)
+         return {"success": False, "error": str(e)}
++
+ def _handle_scroll_action(action: str) -> dict:
+     """Handle scroll action.
+     Args:
+@@ -209,16 +165,13 @@ def _handle_scroll_action(action: str) -> dict:
+         return {"success": False, "error": "Bad scroll format"}
+     try:
+         amount_str = action[7:]
+-        if not amount_str:
+-            return {"success": False, "error": "Missing scroll amount"}
+         amount = int(amount_str)
+         mouse.scroll(amount)
+         return {"success": True}
+-    except ValueError:
+-        return {"success": False, "error": "Scroll amount must be a number"}
+-    except RuntimeError as e:
++    except (ValueError, RuntimeError) as e:
+         logging.error("Scroll action failed: %s", e)
+         return {"success": False, "error": str(e)}
++
+ def _handle_click_action() -> dict:
+     """Handle click action at current mouse position."""
+     try:
+@@ -227,6 +180,7 @@ def _handle_click_action() -> dict:
+     except (RuntimeError, ValueError) as e:
+         logging.error("Click action failed: %s", e)
+         return {"success": False, "error": str(e)}
++
+ def _handle_move_to_action(coords_str) -> dict:
+     """Handle move to coordinates (absolute or relative).
+     Args:
+@@ -249,6 +203,7 @@ def _handle_move_to_action(coords_str) -> dict:
+     except (RuntimeError, ValueError) as e:
+         logging.error("Move to action failed: %s", e)
+         return {"success": False, "error": str(e)}
++
+ def _handle_drag_action(action: str) -> dict:
+     """Handle drag action between coordinates."""
+     parts = action[5:].split(":")
+@@ -264,35 +219,26 @@ def _handle_drag_action(action: str) -> dict:
+     except (RuntimeError, ValueError) as e:
+         logging.error("Drag action failed: %s", e)
+         return {"success": False, "error": str(e)}
++
+ def _parse_coordinates(coords_str: str) -> Optional[Tuple[int, int]]:
+     """Parse x,y coordinates from string."""
+     try:
+         x, y = map(int, coords_str.split(","))
+-        if x < 0 or y < 0:
+-            raise ValueError("Coordinates must be positive")
+         return (x, y)
+-    except ValueError as e:
+-        logging.error("Invalid coordinates: %s", e)
++    except ValueError:
+         return None
+-# Register action handlers with proper parameter passing
+-def make_handler(prefix: str, handler: callable) -> callable:
+-    """Create an action handler that strips the prefix.
+-    Args:
+-        prefix: The action prefix to strip
+-        handler: The handler function to call
+-    Returns:
+-        A function that processes the action after the prefix
+-    """
+-    return lambda action: handler(action[len(prefix):])
++
++# Register action handlers
+ register_handler("type:", lambda action: _handle_type_action(action[5:]))
+-register_handler("press:", make_handler("press:", _handle_press_action))
++register_handler("press:", lambda action: _handle_press_action(action[6:]))
+ register_handler("click", lambda _: _handle_click_action())
+ register_handler("click:", lambda _: _handle_click_action())
+ register_handler("move_to:", lambda action: _handle_move_to_action(coords_str=action[8:]))
+-register_handler("drag:", make_handler("drag:", _handle_drag_action))
++register_handler("drag:", lambda action: _handle_drag_action(action[5:]))
+ register_handler("scroll:", _handle_scroll_action)
++
+ @mcp.tool()
+-def execute_action(action: str) -> bool:
++def execute_action(action: str) -> dict:
+     """Execute system actions with chaining support.
+     Handles both single actions and chained sequences.
+     Args:
+@@ -307,11 +253,11 @@ def execute_action(action: str) -> bool:
+       move_to:rel:x,y - Move relative to current position
+       drag:x1,y1:x2,y2 - Drag between points
+       scroll:amount - Vertical scroll (positive=up, negative=down)
+-        Note: Each unit = 1 scroll notch (120 = high-def scroll). Typical: 15-120.
+-      scroll:horizontal:amount - Horizontal scroll
+-        Note: Each unit = 1 scroll notch (120 = high-def scroll). Typical: 15-120.
+     Returns:
+-        bool: True if all actions succeeded, False otherwise
++        dict: {
++            'success': bool,
++            'error': str (if failed)
++        }
+     Example:
+         execute_action("click:100,200")
+         execute_action("chain:click:100,200;type:hello;press:Enter")
+@@ -326,35 +272,22 @@ def execute_action(action: str) -> bool:
+         "scroll:": _handle_scroll_action,
+     }
+     if not action or not isinstance(action, str):
+-        logging.error("Invalid action")
+         return {"success": False, "error": "Invalid action"}
+     for prefix, handler in handlers.items():
+         if action.startswith(prefix):
+             try:
+-                result = handler()
+-                if isinstance(result, bool):  # Backward compatibility
+-                    return {"success": result, "error": "" if result else "Action failed"}
+-                return result
+-            except (RuntimeError, ValueError, IOError) as e:
++                return handler()
++            except Exception as e:
+                 logging.error("Action failed: %s", e)
+                 return {"success": False, "error": str(e)}
+-    logging.error("Unknown action format: %s", action)
+     return {"success": False, "error": "Unknown action format"}
+-@mcp.tool()
+-def capture_and_analyze(prompt: str) -> dict:
+-    """Capture and analyze screenshot."""
+-    return screen.capture_and_analyze(prompt)
+-# Server entry points
+-if __name__ == "__main__":
+-    try:
+-        mcp.run()
+-        logging.info("MCP server running on port %d", PORT)
+-    except (RuntimeError, IOError) as e:
+-        logging.error("Server failed: %s", e)
++
+ def main():
+     """Script entry point."""
+     try:
+         mcp.run()
+-        logging.info("MCP server running on port %d", PORT)
+-    except RuntimeError as e:
++    except Exception as e:
+         logging.error("Server failed: %s", e)
++
++if __name__ == "__main__":
++    main()
