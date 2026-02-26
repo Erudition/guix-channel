@@ -1,0 +1,72 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -189,15 +189,15 @@
+ mark_as_advanced(FORCE_LEGACY_LIBBPF)
+ 
+ cmake_dependent_option(ENABLE_NETDATA_JOURNAL_FILE_READER "Enable netdata's journal file reader implementation" False "ENABLE_PLUGIN_SYSTEMD_JOURNAL" False)
++set(ENABLE_NETDATA_JOURNAL_FILE_READER OFF)
+ 
+ # Setup Rust/Corrosion for plugins that need it
+-if(ENABLE_NETDATA_JOURNAL_FILE_READER OR ENABLE_PLUGIN_OTEL)
+-    include(FetchContent)
+-    FetchContent_Declare(
+-        Corrosion
+-        GIT_REPOSITORY https://github.com/netdata/corrosion.git
+-        GIT_TAG f3b91559efca32c6b54837866ef35ba98ff5b2ca # stable/v0.5
+-    )
+-    FetchContent_MakeAvailable(Corrosion)
+-    corrosion_import_crate(MANIFEST_PATH src/crates/jf/Cargo.toml
+-                           CRATES journal_reader_ffi otel-plugin)
+-endif()
++# if(ENABLE_NETDATA_JOURNAL_FILE_READER OR ENABLE_PLUGIN_OTEL)
++#     include(FetchContent)
++#     FetchContent_Declare(
++#         Corrosion
++#         GIT_REPOSITORY https://github.com/netdata/corrosion.git
++#         GIT_TAG f3b91559efca32c6b54837866ef35ba98ff5b2ca # stable/v0.5
++#     )
++#     FetchContent_MakeAvailable(Corrosion)
++#     corrosion_import_crate(MANIFEST_PATH src/crates/jf/Cargo.toml
++#                            CRATES journal_reader_ffi otel-plugin)
++# endif()
+@@ -3085,21 +3085,21 @@
+ #
+ # systemd journal
+ #
+-if(ENABLE_PLUGIN_SYSTEMD_JOURNAL)
+-    add_executable(systemd-journal.plugin
+-            src/collectors/systemd-journal.plugin/systemd-journal.c
+-            src/collectors/systemd-journal.plugin/systemd-journal.h
+-            src/collectors/systemd-journal.plugin/provider/netdata_provider.c
+-            src/collectors/systemd-journal.plugin/provider/netdata_provider.h
+-            src/collectors/systemd-journal.plugin/provider/systemd_provider.c
+-            src/collectors/systemd-journal.plugin/provider/systemd_provider.h
+-    )
+-    target_link_libraries(systemd-journal.plugin PUBLIC libnetdata)
+-    if(ENABLE_NETDATA_JOURNAL_FILE_READER)
+-        corrosion_link_libraries(systemd-journal.plugin journal_reader_ffi)
+-    endif()
+-    install(TARGETS systemd-journal.plugin
+-            COMPONENT netdata
+-            DESTINATION "${PLUGINSDIR}")
+-endif()
++# if(ENABLE_PLUGIN_SYSTEMD_JOURNAL)
++#     add_executable(systemd-journal.plugin
++#             src/collectors/systemd-journal.plugin/systemd-journal.c
++#             src/collectors/systemd-journal.plugin/systemd-journal.h
++#             src/collectors/systemd-journal.plugin/provider/netdata_provider.c
++#             src/collectors/systemd-journal.plugin/provider/netdata_provider.h
++#             src/collectors/systemd-journal.plugin/provider/systemd_provider.c
++#             src/collectors/systemd-journal.plugin/provider/systemd_provider.h
++#     )
++#     target_link_libraries(systemd-journal.plugin PUBLIC libnetdata)
++#     if(ENABLE_NETDATA_JOURNAL_FILE_READER)
++#         corrosion_link_libraries(systemd-journal.plugin journal_reader_ffi)
++#     endif()
++#     install(TARGETS systemd-journal.plugin
++#             COMPONENT netdata
++#             DESTINATION "${PLUGINSDIR}")
++# endif()
+ 
+ #
+ # systemd-cat-native
