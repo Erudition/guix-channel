@@ -73,7 +73,7 @@
                    (display "#") (display "!")
                    (display (assoc-ref inputs "bash-minimal"))
                    (display "/bin/bash\n")
-                   (display "exec \"") (display real-bin) (display "\" \"$@\"\n")))
+                   (display "exec \"") (display real-bin) (display "\" \"$@\" --disable-gpu\n")))
                (chmod (string-append bin "/antigravity") #o755)
                #t)))
          (add-after 'create-wrapper 'fix-keymapping-path
