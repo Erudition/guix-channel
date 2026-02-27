@@ -47,11 +47,11 @@
     (arguments
      `(#:patchelf-plan
        `(("opt/activitywatch/aw-qt"
-            ("libxkbcommon" "xkeyboard-config" "libxcb" "glibc" "gcc:lib"))
-         ("opt/activitywatch/aw-server/aw-server" ("glibc"))
-         ("opt/activitywatch/aw-server-rust/aw-server-rust" ("glibc"))
-         ("opt/activitywatch/aw-watcher-afk/aw-watcher-afk"  ("glibc"))
-         ("opt/activitywatch/aw-watcher-window/aw-watcher-window" ("glibc")))
+            ("libxkbcommon" "xkeyboard-config" "libxcb" "glibc" "gcc:lib" "zlib" "mesa" "fontconfig" "freetype" "glib"))
+         ("opt/activitywatch/aw-server/aw-server" ("glibc" "zlib" "gcc:lib" "glib"))
+         ("opt/activitywatch/aw-server-rust/aw-server-rust" ("glibc" "gcc:lib"))
+         ("opt/activitywatch/aw-watcher-afk/aw-watcher-afk"  ("glibc" "zlib" "gcc:lib" "glib"))
+         ("opt/activitywatch/aw-watcher-window/aw-watcher-window" ("glibc" "zlib" "gcc:lib" "glib")))
        #:phases
        (modify-phases %standard-phases
          (replace 'unpack
@@ -63,6 +63,14 @@
                   (("aw-qt")  (string-append %output "/bin/aw-qt")))
              ;; remove for conflicting issue with libpng
              (invoke "rm" "opt/activitywatch/libz.so.1")
+             ;; remove bundled libraries that conflict with system ones
+             (for-each (lambda (file)
+                         (let ((path (string-append "opt/activitywatch/" file)))
+                           (if (file-exists? path)
+                               (delete-file path))))
+                       '("libstdc++.so.6" "libgcc_s.so.1" "libglib-2.0.so.0"
+                         "libgio-2.0.so.0" "libgobject-2.0.so.0"
+                         "libgmodule-2.0.so.0" "libgthread-2.0.so.0"))
              ;; mv desktop file
              (mkdir-p "share/applications/")
              (invoke "mv" "opt/activitywatch/aw-qt.desktop" "share/applications/")
@@ -92,11 +100,19 @@
            (lambda* (#:key inputs outputs #:allow-other-keys)
              (let ((out (assoc-ref outputs "out")))
                (wrap-program (string-append out "/opt/activitywatch/aw-qt")
+                 `("XDG_DATA_DIRS" ":"
+                   prefix
+                   (,(string-join
+                      (list
+                       (string-append (assoc-ref inputs "gsettings-desktop-schemas") "/share")
+                       (string-append out "/share"))
+                      ":"))))
+               (wrap-program (string-append out "/opt/activitywatch/aw-qt")
                  `("QT_XKB_CONFIG_ROOT" ":"
                    prefix
                    (,(string-join
                       (list
-                       (string-append (assoc-ref inputs "xkeyboard-config") "/share/X11/")
+                       (string-append (assoc-ref inputs "xkeyboard-config") "/share/X11/xkb")
                       out)
                      ":"))))
                (wrap-program (string-append out "/opt/activitywatch/aw-qt")
@@ -117,6 +133,7 @@
                        (string-append (assoc-ref inputs "zlib") "/lib")
                        (string-append (assoc-ref inputs "libxcb") "/lib")
                        (string-append (assoc-ref inputs "glibc") "/lib")
+                       (string-append (assoc-ref inputs "glib") "/lib")
                        (string-append (assoc-ref inputs "gcc:lib") "/lib")
                        (string-append (assoc-ref inputs "freetype") "/lib")
                        (string-append out "/opt/activitywatch")
@@ -132,6 +149,8 @@
           "1w62s9y8z6yn2mv55npsg1rfi2az4lim62v4awxwq1xzx4249pi0"))
        ("gcc:lib" ,gcc "lib")
        ("glibc" ,glibc)
+       ("glib" ,glib)
+       ("gsettings-desktop-schemas" ,gsettings-desktop-schemas)
        ("fontconfig" ,fontconfig)
        ("freetype" ,freetype)
        ("libxcb" ,libxcb)
