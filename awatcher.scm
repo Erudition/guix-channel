@@ -32,13 +32,13 @@
 (define-public awatcher
   (package
     (name "awatcher")
-    (version "0.3.1")
+    (version "0.3.2")
     (source (origin
       (method url-fetch)
         (uri
           (string-append "https://github.com/2e3s/awatcher/releases/download/v" version "/awatcher_" version "-1_amd64.deb"))
           (file-name (string-append "awatcher-bundle.deb"))
-          (sha256 (base32 "0da96pr6gxa1p1imdl0gn6ifyzjm2zda467jhcmh0vnqj6g10w3z"))
+          (sha256 (base32 "1myhkzcrdym9211n2dvf82xy1svcwkswg7sflwz070siaica0dqq"))
           (modules '((guix build utils)))
           ; (snippet
           ;   '(begin
