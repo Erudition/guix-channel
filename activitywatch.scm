@@ -117,7 +117,7 @@
                        (string-append (assoc-ref inputs "zlib") "/lib")
                        (string-append (assoc-ref inputs "libxcb") "/lib")
                        (string-append (assoc-ref inputs "glibc") "/lib")
-                       (string-append (assoc-ref inputs "gcc") "/lib")
+                       (string-append (assoc-ref inputs "gcc:lib") "/lib")
                        (string-append (assoc-ref inputs "freetype") "/lib")
                        (string-append out "/opt/activitywatch")
                        out)
@@ -130,7 +130,7 @@
         ,(make-aw-release-asset
           version "activitywatch"
           "1w62s9y8z6yn2mv55npsg1rfi2az4lim62v4awxwq1xzx4249pi0"))
-       ("gcc" ,gcc "lib")
+       ("gcc:lib" ,gcc "lib")
        ("glibc" ,glibc)
        ("fontconfig" ,fontconfig)
        ("freetype" ,freetype)
