@@ -22,6 +22,7 @@
   #:use-module (gnu packages linux)
   #:use-module (gnu packages tls)
   #:use-module (gnu packages cups)
+  #:use-module (gnu packages gcc)
   #:use-module (gnu packages commencement)
   #:use-module (guix git-download)
   #:export (awatcher))
@@ -53,7 +54,7 @@
     (arguments
      `(#:patchelf-plan
        `(("bin/awatcher"
-            ("libxkbcommon" "xkeyboard-config" "libxcb" "glibc" "gcc-toolchain" "dbus" "openssl"))
+            ("libxkbcommon" "xkeyboard-config" "libxcb" "glibc" "gcc:lib" "dbus" "openssl" "zlib"))
          )
        #:phases
        (modify-phases %standard-phases
@@ -61,14 +62,10 @@
            (lambda* (#:key inputs outputs #:allow-other-keys)
               (invoke "ar" "x" "awatcher-bundle.deb" "data.tar.xz")
               (invoke "tar" "--strip=1" "-xJf" "data.tar.xz")
-              (invoke "ls")
-              ; (invoke "mv" "usr/*" ".")
               (delete-file "data.tar.xz")
-              ; (delete-file-recursively "usr")
               (delete-file "awatcher-bundle.deb")
               (substitute* '("share/applications/awatcher.desktop")
-                  (("awatcher")  (string-append %output "/bin/awatcher")))
-              (substitute* '("share/applications/awatcher.desktop")
+                  (("Exec=awatcher") (string-append "Exec=" %output "/bin/awatcher"))
                   (("/usr/")  (string-append %output "/")))
              ;; copy desktop file to autostart dir
              (mkdir-p "etc/xdg/autostart/")
@@ -85,7 +82,7 @@
      ("tar" ,tar)
     )) 
     (inputs
-     `(("gcc-toolchain" ,gcc-toolchain)
+     `(("gcc:lib" ,gcc "lib")
        ("glibc" ,glibc)
        ("fontconfig" ,fontconfig)
        ("dbus" ,dbus)
