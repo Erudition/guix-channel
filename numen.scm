@@ -139,16 +139,18 @@ window functions and applying them to functions.  Supported window
 types are Bartlett, Blackman, flat top, Hamming, Hann and rectangular."))
 
 (define-public numen
-  (package
-    (name "numen")
-    (version "0.7")
-    (source (origin
-              (method git-fetch)
-              (uri (git-reference
-                    (url "https://git.sr.ht/~geb/numen")
-                    (commit "b5c3976beeb9bc07b668c76373be7af005d937f5")))
-              (sha256
-               (base32 "04718h5d8v43yg36v9hlicpmnsv8mcg0bnyhfhcdlw4y61x1236w"))))
+  (let ((commit "b5c3976beeb9bc07b668c76373be7af005d937f5")
+        (revision "1"))
+    (package
+      (name "numen")
+      (version (git-version "0.7" revision commit))
+      (source (origin
+                (method git-fetch)
+                (uri (git-reference
+                      (url "https://git.sr.ht/~geb/numen")
+                      (commit commit)))
+                (sha256
+                 (base32 "04718h5d8v43yg36v9hlicpmnsv8mcg0bnyhfhcdlw4y61x1236w"))))
     (build-system go-build-system)
     (arguments
      (list
