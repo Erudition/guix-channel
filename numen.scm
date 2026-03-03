@@ -185,6 +185,12 @@ types are Bartlett, Blackman, flat top, Hamming, Hann and rectangular."))
                   (copy-recursively "scripts" scripts)
                   (mkdir-p man1)
                   (invoke "sh" "-c" (string-append "scdoc < doc/numen.1.scd > " man1 "/numen.1"))))))
+          (add-after 'patch-paths 'patch-arecord
+            (lambda* (#:key inputs #:allow-other-keys)
+              (let ((arecord (search-input-file inputs "/bin/arecord")))
+                (with-directory-excursion "src/git.sr.ht/~geb/numen"
+                  (substitute* '("numen.go" "audio.go")
+                    (("\"arecord\"") (string-append "\"" arecord "\"")))))))
           (add-after 'unpack 'patch-opt-version ; TODO: Send patch upstream
             (lambda _
               (with-directory-excursion "src/git.sr.ht/~geb/numen"
@@ -207,7 +213,7 @@ types are Bartlett, Blackman, flat top, Hamming, Hann and rectangular."))
                     go-github-com-mjibson-go-dsp-window
                     pkg-config))
     (inputs (list alsa-utils libxkbcommon))
-    (propagated-inputs (list dotool alsa-utils vosk-model-small-en-us))
+    (propagated-inputs (list dotool vosk-model-small-en-us))
     (synopsis "Control your computer using your voice")
     (description "Numen is voice control software letting you have
 full control of a Linux machine without needing to type.  It helps
