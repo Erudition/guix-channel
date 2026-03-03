@@ -19,7 +19,14 @@
   #:use-module (gnu packages golang-build)
   #:use-module (gnu packages commencement)
   #:use-module (dotool)
-  #:use-module (vosk))
+  #:use-module (vosk)
+  #:export (go-github-com-m7shapan-njson
+            go-github-com-mjibson-go-dsp-dsputils
+            go-github-com-mjibson-go-dsp-fft
+            go-github-com-mjibson-go-dsp-spectral
+            go-github-com-mjibson-go-dsp-wav
+            go-github-com-mjibson-go-dsp-window
+            numen))
 
 (define-public go-github-com-m7shapan-njson
   (package
