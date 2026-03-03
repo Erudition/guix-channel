@@ -185,12 +185,6 @@ types are Bartlett, Blackman, flat top, Hamming, Hann and rectangular."))
                   (copy-recursively "scripts" scripts)
                   (mkdir-p man1)
                   (invoke "sh" "-c" (string-append "scdoc < doc/numen.1.scd > " man1 "/numen.1"))))))
-          (add-after 'patch-paths 'patch-arecord
-            (lambda* (#:key inputs #:allow-other-keys)
-              (let ((arecord (search-input-file inputs "/bin/arecord")))
-                (with-directory-excursion "src/git.sr.ht/~geb/numen"
-                  (substitute* '("numen.go" "audio.go")
-                    (("\"arecord\"") (string-append "\"" arecord "\"")))))))
           (add-after 'unpack 'patch-opt-version ; TODO: Send patch upstream
             (lambda _
               (with-directory-excursion "src/git.sr.ht/~geb/numen"
@@ -202,7 +196,13 @@ types are Bartlett, Blackman, flat top, Hamming, Hann and rectangular."))
                 (with-directory-excursion "src/git.sr.ht/~geb/numen"
                   (substitute* (append (find-files "scripts" "")
                                        (find-files "phrases" ".*\\.phrases"))
-                    (("/etc/numen") (string-append out "/share/numen"))))))))))
+                    (("/etc/numen") (string-append out "/share/numen")))))))
+          (add-after 'patch-paths 'patch-arecord
+            (lambda* (#:key inputs #:allow-other-keys)
+              (let ((arecord (search-input-file inputs "/bin/arecord")))
+                (with-directory-excursion "src/git.sr.ht/~geb/numen"
+                  (substitute* '("numen.go" "audio.go")
+                    (("\"arecord\"") (string-append "\"" arecord "\""))))))))))
     (native-inputs (list
                     scdoc
                     go-git-sr-ht-gb-opt
