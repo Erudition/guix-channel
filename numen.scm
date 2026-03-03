@@ -214,6 +214,4 @@ full control of a Linux machine without needing to type.  It helps
 people who otherwise couldn't use their computers, and helps more
 avoid hand strain.  Numen runs locally.")
     (home-page "https://numenvoice.org/")
-    (license license:agpl3)))
-
-numen
+    (license license:agpl3))))
