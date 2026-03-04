@@ -10,7 +10,7 @@
 (define-public gnome-shell-extension-numen
   (package
     (name "gnome-shell-extension-numen")
-    (version "0.1.2")
+    (version "0.1.3")
     (source (local-file "/home/adroit/Gemini_Projects/numen-gnome-extension"
                         #:recursive? #t))
     (build-system copy-build-system)
