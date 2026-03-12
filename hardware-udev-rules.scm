@@ -59,3 +59,18 @@
     (synopsis "udev rule to set NVMe IO scheduler")
     (description "Sets the IO scheduler for NVMe drives to mq-deadline.")
     (license license:public-domain)))
+
+(define-public 3d-scanner-udev-rules
+  (package
+    (name "3d-scanner-udev-rules")
+    (version "1.0")
+    (source (local-file "udev-rules" #:recursive? #t))
+    (build-system copy-build-system)
+    (arguments
+     (list #:install-plan
+           #~'(("99-3d-scanner.rules" "lib/udev/rules.d/"))))
+    (home-page "")
+    (synopsis "udev rules for 3DMatrix scanner and Sentinel dongle")
+    (description "Provides udev rules for the 3DMatrix Cypress FX3 scanner and Aladdin Knowledge Systems Sentinel HL dongle.")
+    (license license:public-domain)))
+

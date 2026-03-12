@@ -1,0 +1,4 @@
+# Cypress FX3 (3D Scanner)
+SUBSYSTEM=="usb", ATTRS{idVendor}=="04b4", ATTRS{idProduct}=="00f1", MODE="0666", GROUP="plugdev"
+# Aladdin Knowledge Systems Sentinel HL (Dongle)
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0529", ATTRS{idProduct}=="0003", MODE="0666", GROUP="plugdev"
