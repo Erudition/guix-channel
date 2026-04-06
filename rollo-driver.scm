@@ -29,7 +29,15 @@
           (add-after 'unpack 'patch-configure
             (lambda _
               (substitute* "configure"
-                (("/usr/bin/rm") "rm")))))))
+                (("/usr/bin/rm") "rm"))))
+          (add-after 'install 'patch-ppd
+            (lambda* (#:key outputs #:allow-other-keys)
+              (let* ((out (assoc-ref outputs "out"))
+                     (filter (string-append out "/lib/cups/filter/rastertorollo")))
+                (substitute* (find-files (string-append out "/share/cups/model")
+                                         "\\.ppd$")
+                  (("rastertorollo")
+                   filter))))))))
     (native-inputs
      (list pkg-config))
     (inputs
