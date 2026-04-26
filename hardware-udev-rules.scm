@@ -74,3 +74,18 @@
     (description "Provides udev rules for the 3DMatrix Cypress FX3 scanner and Aladdin Knowledge Systems Sentinel HL dongle.")
     (license license:public-domain)))
 
+
+(define-public ingenic-udev-rules
+  (package
+    (name "ingenic-udev-rules")
+    (version "1.0")
+    (source (local-file "udev-rules" #:recursive? #t))
+    (build-system copy-build-system)
+    (arguments
+     (list #:install-plan
+           #~'(("99-ingenic.rules" "lib/udev/rules.d/"))))
+    (home-page "")
+    (synopsis "udev rules for Ingenic devices")
+    (description "Provides udev rules for Ingenic USB devices.")
+    (license license:public-domain)))
+
