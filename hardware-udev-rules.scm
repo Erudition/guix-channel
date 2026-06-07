@@ -89,3 +89,16 @@
     (description "Provides udev rules for Ingenic USB devices.")
     (license license:public-domain)))
 
+(define-public esp32-udev-rules
+  (package
+    (name "esp32-udev-rules")
+    (version "1.0")
+    (source (local-file "udev-rules" #:recursive? #t))
+    (build-system copy-build-system)
+    (arguments
+     (list #:install-plan
+           #~'(("99-esp32.rules" "lib/udev/rules.d/"))))
+    (home-page "")
+    (synopsis "udev rules for ESP32 devices")
+    (description "Provides udev rules for ESP32 native USB and ESP-Prog.")
+    (license license:public-domain)))
