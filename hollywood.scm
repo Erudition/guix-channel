@@ -49,8 +49,23 @@
        (modify-phases %standard-phases
          (add-after 'unpack 'patch-paths
            (lambda _
+             (delete-file "lib/hollywood/apg")
+             (delete-file "lib/hollywood/speedometer")
+             (substitute* (find-files "lib/hollywood" ".*")
+               (("command -v ccze.*") "")
+               (("\\| ?ccze.*") ""))
+             (substitute* '("lib/hollywood/bat" "lib/hollywood/code")
+               (("FILES=\\$([^)]+)") "FILES=\"\\$(dirname \\$0)/bat\"")
+               (("f=\\$([^)]+)") "f=\"\\$(dirname \\$0)/bat\""))
+             (substitute* "lib/hollywood/jp2a"
+               (("FILES=\\$([^)]+)") "FILES=\"\\$(dirname \\$0)/../../share/hollywood/map.jpg\""))
+             (substitute* '("lib/hollywood/hexdump" "lib/hollywood/stat")
+               (("/usr/bin/") "/run/current-system/profile/bin/"))
              (substitute* "lib/hollywood/bat"
                (("batcat") "bat"))
+             (substitute* "bin/hollywood"
+               (("\\\\; \\\\") "")
+               ((".*pane-active-border-.*") ""))
              (substitute* "lib/hollywood/mplayer"
                (("command -v mplayer") "command -v mpv")
                (("mplayer -vo caca.*") "mpv -vo=caca --no-audio --loop-file=inf --start=$((RANDOM % 100)) --speed=100 $dir/soundwave.mp4"))
