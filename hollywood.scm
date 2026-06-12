@@ -53,12 +53,15 @@
              (delete-file "lib/hollywood/speedometer")
              (substitute* (find-files "lib/hollywood" ".*")
                (("command -v ccze.*") "")
-               (("\\| ?ccze.*") ""))
+               (("\\| ?ccze[^\n]*") ""))
              (substitute* '("lib/hollywood/bat" "lib/hollywood/code")
-               (("FILES=\\$([^)]+)") "FILES=\"\\$(dirname \\$0)/bat\"")
-               (("f=\\$([^)]+)") "f=\"\\$(dirname \\$0)/bat\""))
+               (("FILES=\\$\\(.*\\)") "FILES=\"\\$(dirname \\$0)/bat\"")
+               (("f=\\$\\(.*\\)") "f=\"\\$(dirname \\$0)/bat\""))
              (substitute* "lib/hollywood/jp2a"
-               (("FILES=\\$([^)]+)") "FILES=\"\\$(dirname \\$0)/../../share/hollywood/map.jpg\""))
+               (("FILES=\\$\\(.*\\)") "FILES=\"\\$(dirname \\$0)/../../share/hollywood/map.jpg\""))
+             (substitute* "lib/hollywood/man"
+               (("ls /usr/share/man/man1/") "ls /run/current-system/profile/share/man/man1/")
+               (("\\\\\\.1\\\\\\.gz") "\\\\.1\\\\..*"))
              (substitute* '("lib/hollywood/hexdump" "lib/hollywood/stat")
                (("/usr/bin/") "/run/current-system/profile/bin/"))
              (substitute* "lib/hollywood/bat"
