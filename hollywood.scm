@@ -21,7 +21,9 @@
   #:use-module (gnu packages networking)
   #:use-module (gnu packages syndication)
   #:use-module (gnu packages w3m)
-  #:use-module (gnu packages moreutils))
+  #:use-module (gnu packages moreutils)
+  #:use-module (gnu packages wget)
+  #:use-module (gnu packages ncurses))
 
 (define-public hollywood
   (package
@@ -49,6 +51,9 @@
            (lambda _
              (substitute* "lib/hollywood/bat"
                (("batcat") "bat"))
+             (substitute* "lib/hollywood/mplayer"
+               (("command -v mplayer") "command -v mpv")
+               (("mplayer -vo caca.*") "mpv -vo=caca --no-audio --loop-file=inf --start=$((RANDOM % 100)) --speed=100 $dir/soundwave.mp4"))
              #t))
          (add-after 'install 'wrap-programs
            (lambda* (#:key inputs outputs #:allow-other-keys)
@@ -74,7 +79,7 @@
        ("cmatrix" ,cmatrix)
        ("figlet" ,figlet)
        ("jp2a" ,jp2a)
-       ("mplayer" ,mplayer)
+       ("mpv" ,mpv)
        ("pv" ,pv)
        ("htop" ,htop)
        ("atop" ,atop)
@@ -84,7 +89,9 @@
        ("openssh" ,openssh)
        ("libcaca" ,libcaca)
        ("newsboat" ,newsboat)
-       ("w3m" ,w3m)))
+       ("w3m" ,w3m)
+       ("ncurses" ,ncurses)
+       ("wget" ,wget)))
     (home-page "https://hollywood.computer/")
     (synopsis "Fill your console with Hollywood melodrama technobabble")
     (description "This utility splits your terminal into multiple panes of genuine
