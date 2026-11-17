@@ -109,7 +109,7 @@
                 (("pydantic>=2.11.0") "pydantic>=2.10.4")))))))
     (propagated-inputs
      (list python-httpx
-           python-pydantic-2
+           python-pydantic
            python-anyio
            python-httpx-sse
            python-jsonschema
@@ -135,7 +135,7 @@
         (base32 "0f29vpixq9zrkspz77vh6xh3h2xqhkdiig14pgqydaa6hzcnwz02"))))
     (build-system pyproject-build-system)
     (arguments (list #:tests? #f))
-    (propagated-inputs (list python-httpx python-pydantic-2 python-typing-extensions python-dnspython))
+    (propagated-inputs (list python-httpx python-pydantic python-typing-extensions python-dnspython))
     (native-inputs (list python-poetry-core python-poetry-dynamic-versioning))
     (home-page "https://atproto.blue")
     (synopsis "The AT Protocol SDK")
@@ -164,7 +164,7 @@
                 (("\"tracebacks_max_frames\": [0-9]+,") "")))))))
     (propagated-inputs (list python-httpx
                              python-mcp
-                             python-pydantic-2
+                             python-pydantic
                              python-pydantic-settings
                              python-dotenv
                              python-typer

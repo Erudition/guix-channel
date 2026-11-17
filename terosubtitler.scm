@@ -510,9 +510,9 @@ Lazarus applications.")
            gtk+-2
            gdk-pixbuf
            pango
-           cairo
-           atk
-           glib
+            cairo
+            at-spi2-core
+            glib
            mpv
            ffmpeg
            tesseract-ocr

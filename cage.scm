@@ -23,8 +23,8 @@
     (build-system meson-build-system)
     (native-inputs
      (list pkg-config wayland-protocols))
-    (inputs
-     (list wlroots-0.18 wayland libxkbcommon mesa pixman))
+     (inputs
+      (list wlroots-0.19 wayland libxkbcommon mesa pixman))
     (synopsis "Wayland kiosk compositor")
     (description "Cage is a Wayland kiosk compositor, which displays a single
 maximized application at a time.")
