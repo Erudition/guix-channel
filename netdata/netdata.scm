@@ -226,7 +226,7 @@
        ("zlib" ,zlib)
        ("lz4" ,lz4)
        ("zstd" ,zstd "lib")
-       ("brotli" ,google-brotli)
+        ("brotli" ,brotli)
        ("util-linux" ,util-linux "lib")
        ("libcap" ,libcap)
        ("libmnl" ,libmnl)
