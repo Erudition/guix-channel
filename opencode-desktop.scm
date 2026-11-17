@@ -21,14 +21,27 @@
     (build-system chromium-binary-build-system)
     (arguments
      (list #:validate-runpath? #f ; TODO: fails on wrapped binary and included other files
-           #:wrapper-plan
-           #~'(("lib/OpenCode/ai.opencode" (("out" "/lib/OpenCode")))
-               ("lib/OpenCode/chrome_crashpad_handler" (("out" "/lib/OpenCode")))
-                ("lib/OpenCode/resources/opencode-cli" (("out" "/lib/OpenCode"))))
-            #:phases
-            #~(begin
-                (use-modules (ice-9 textual-ports))
-                (modify-phases %standard-phases
+            ;; The guix `strip' phase must not run: strip --strip-debug
+            ;; moves .dynstr out of every PT_LOAD segment on the bun
+            ;; standalone sidecar, which loses the embedded app payload
+            ;; (the binary degrades to the bare bun runtime printing
+            ;; "1.4.4").  Same "allocated section `.dynstr' not in
+            ;; segment" failure as nonguix game-development.scm and
+            ;; music.scm.  The main ELF and the crashpad handler ship
+            ;; pre-stripped, so this only costs sidecar debug size.
+            #:strip-binaries? #f
+            ;; The sidecar lib/OpenCode/resources/opencode-cli is
+            ;; deliberately NOT in the wrapper-plan: patchelf --set-rpath
+            ;; corrupts its DT_VERDEF dynamic entry (see the
+            ;; patch-sidecar-interpreter phase below).
+            #:wrapper-plan
+            #~'(("lib/OpenCode/ai.opencode" (("out" "/lib/OpenCode")))
+                ("lib/OpenCode/chrome_crashpad_handler" (("out" "/lib/OpenCode"))))
+             #:phases
+             #~(begin
+                 (use-modules (ice-9 textual-ports)
+                              (ice-9 popen))
+                 (modify-phases %standard-phases
                 (add-after 'binary-unpack 'setup-cwd
                   (lambda _
                     (copy-recursively "usr/" ".")
@@ -76,10 +89,40 @@
                             (string-set! contents (+ offset i)
                                          (string-ref disabled i))
                             (loop (1+ i))))
-                        (call-with-output-file asar
-                          (lambda (port)
-                            (put-string port contents))
-                          #:encoding "ISO-8859-1")))))
+                         (call-with-output-file asar
+                           (lambda (port)
+                             (put-string port contents))
+                           #:encoding "ISO-8859-1")))))
+                (add-after 'setup-cwd 'patch-sidecar-interpreter
+                  (lambda* (#:key inputs #:allow-other-keys)
+                    ;; The bundled CLI sidecar is a bun single-file
+                    ;; executable.  patchelf --set-rpath corrupts it: the
+                    ;; DT_VERDEF d_ptr goes stale once .gnu.version_d is
+                    ;; relocated, so ld.so ends up parsing .dynsym padding
+                    ;; and dies with "unsupported version 0 of Verdef
+                    ;; record" + SIGSEGV (reproduced with patchelf 0.16.1
+                    ;; and 0.18.0).  Hence interpreter ONLY, no rpath; the
+                    ;; sidecar's NEEDED libraries are all in glibc and are
+                    ;; resolved via the loader.  Loader lookup mirrors the
+                    ;; 'patchelf phase of nonguix's binary-build-system.
+                    (let* ((interpreter
+                            (car (find-files (assoc-ref inputs "libc")
+                                             "ld-linux.*\\.so")))
+                           (sidecar "lib/OpenCode/resources/opencode-cli"))
+                      (invoke "patchelf" "--set-interpreter"
+                              interpreter sidecar)
+                      ;; Soft self-check only: the build sandbox may lack
+                      ;; the runtime bits the bun executable needs.
+                      (let* ((port (open-pipe* OPEN_READ sidecar "--version"))
+                             (output (get-string-all port))
+                             (status (close-pipe port)))
+                        (if (and (eqv? (status:exit-val status) 0)
+                                 (string-contains output "opencode"))
+                            (format #t "sidecar self-check OK: ~a" output)
+                            (format (current-error-port)
+                                    "WARNING: opencode-cli --version \
+self-check failed in sandbox (exit ~a, output: ~a); continuing~%"
+                                    (status:exit-val status) output))))))
                (add-after 'install 'symlink-binary-file
                  (lambda _
                    (mkdir-p (string-append #$output "/bin"))
